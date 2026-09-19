@@ -29,3 +29,4 @@ if push_git.returncode != 0:
     exit()
 
 print("Saved and pushed.")
+print("Commit message:", message)
