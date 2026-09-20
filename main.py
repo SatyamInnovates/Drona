@@ -6,13 +6,15 @@ repo = "C:\\Drona"
 def run(cmd):
     return subprocess.run(cmd, capture_output=True, text=True, cwd=repo)
 
+
 status = run(["git", "status", "--porcelain", "--untracked-files=all"])
 if status.stdout == "":
     print("No changes to commit.")
     exit()
 
+
 lines = status.stdout.splitlines()
-topics = [topic_finding(line[3:]) for line in lines]   # peel status code, then folder/extension
+topics = [topic_finding(line[3:]) for line in lines]   
 message = "Auto save " + ", ".join(topics)
 print(message)
 
