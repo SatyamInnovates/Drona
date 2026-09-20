@@ -1,30 +1,27 @@
 import subprocess
-import datetime
+from topic import topic_finding
+
 repo = "C:\\Drona"
 
+def run(cmd):
+    return subprocess.run(cmd, capture_output=True, text=True, cwd=repo)
 
-
-status_git = subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True,cwd = repo)
-if status_git.stdout == '':
+status = run(["git", "status", "--porcelain", "--untracked-files=all"])
+if status.stdout == "":
     print("No changes to commit.")
     exit()
 
+lines = status.stdout.splitlines()
+topics = [topic_finding(line[3:]) for line in lines]   # peel status code, then folder/extension
+message = "Auto save " + ", ".join(topics)
+print(message)
 
-add_git = subprocess.run(['git', 'add', '.'], capture_output=True, text=True,cwd = repo)
-if add_git.returncode != 0:
-    print(add_git.stderr)
-    exit()
+for cmd in (["git", "add", "."],
+            ["git", "commit", "-m", message],
+            ["git", "push"]):
+    result = run(cmd)
+    if result.returncode != 0:
+        print(result.stderr)
+        exit()
 
-
-message = f"Auto save {datetime.date.today()}"
-commit_git = subprocess.run(['git', 'commit', '-m', message], capture_output=True, text=True,cwd = repo)
-if commit_git.returncode != 0:
-    print(commit_git.stderr)
-    exit()
-    
-push_git = subprocess.run(['git', 'push'], capture_output=True, text=True,cwd = repo)
-if push_git.returncode != 0:
-    print(push_git.stderr)
-    exit()
-
-print("Saved and pushed.")
+print("Pushed to github successfully")
