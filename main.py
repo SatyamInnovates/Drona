@@ -26,5 +26,6 @@ for cmd in (["git", "add", "."],
         print(result.stderr)
         exit()
 
+
 print("Pushed to github successfully")
 
