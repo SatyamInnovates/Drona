@@ -15,6 +15,7 @@ if status.stdout == "":
 
 
 lines = status.stdout.splitlines()
+print(lines)
 topics = [topic_finding(line[3:]) for line in lines]
 categories = [category_finding(line[3:]) for line in lines]
 print("Topics found:", topics)
