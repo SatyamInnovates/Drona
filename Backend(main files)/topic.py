@@ -3,3 +3,10 @@ def topic_finding(path):
     return name.rsplit(".", 1)[0]                    
 
 
+
+def category_finding(path):
+    print("PATH RECEIVED:", repr(path))
+    parts = path.replace("\\", "/").split("/")
+    
+    return parts[-2]   
+

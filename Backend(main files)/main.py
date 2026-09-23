@@ -1,8 +1,8 @@
 import subprocess
-from topic import topic_finding
+from topic import topic_finding,category_finding
 import json
 
-repo = "C:\\Drona"
+repo = r"C:\\Drona"
 
 def run(cmd):
     return subprocess.run(cmd, capture_output=True, text=True, cwd=repo)
@@ -15,7 +15,8 @@ if status.stdout == "":
 
 
 lines = status.stdout.splitlines()
-topics = [topic_finding(line[3:]) for line in lines]   
+topics = [topic_finding(line[3:]) for line in lines]
+categories = [category_finding(line[3:]) for line in lines]
 print("Topics found:", topics)
 message = "save " + " ".join(topics)
 print(message)
@@ -37,7 +38,7 @@ for data_point in data_output.splitlines():
 
  
 
-with open('C:\Drona\Backend(main files)\data.json','w') as file:
+with open(r'C:\Drona\Backend(main files)\data.json','w') as file:
     json.dump(commits,file)
 
 
