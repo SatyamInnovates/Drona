@@ -15,7 +15,7 @@ if status.stdout == "":
 
 lines = status.stdout.splitlines()
 topics = [topic_finding(line[3:]) for line in lines]   
-message = "Auto save " + ", ".join(topics)
+message = "save" + ", ".join(topics)
 print(message)
 
 for cmd in (["git", "add", "."],
