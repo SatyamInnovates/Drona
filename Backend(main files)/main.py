@@ -36,7 +36,7 @@ for data_point in data_output.splitlines():
 
 
 
-with open('data.json','w') as file:
+with open('C:\Drona\Backend(main files)\data.json','w') as file:
     json.dump(commits,file)
 
 
