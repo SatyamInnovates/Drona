@@ -35,6 +35,8 @@ data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
 commits = []
 for data_point in data_output.splitlines():
     date, data_topic = data_point.split('|')
+    for category in categories:
+        print(category)
     commits.append({"date":date,"topic":data_topic})
 
  
