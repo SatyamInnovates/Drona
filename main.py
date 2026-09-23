@@ -33,5 +33,6 @@ data_output = [run(['git','log','--format=%ad|%s','--date=short'])].stdout
 #     print("----------------")
 
 print(data_output)
+
 print("Pushed to github successfully")
 
