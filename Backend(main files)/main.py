@@ -1,7 +1,9 @@
 import subprocess
 from topic import topic_finding,category_finding
 import json
+from pathlib import Path
 
+main_file = Path(__file__).parent / "main.py"
 repo = r"C:\\Drona"
 
 def run(cmd):
