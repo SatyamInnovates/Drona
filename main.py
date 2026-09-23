@@ -26,7 +26,7 @@ for cmd in (["git", "add", "."],
         print(result.stderr)
         exit()
 
-data_output = run(['git','log','--format=%ad|%s','--date=short'],capture_output=True,text=True,cwd=repo).stdout
+data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
 
 
 print(data_output)
