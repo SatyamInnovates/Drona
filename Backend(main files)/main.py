@@ -34,7 +34,7 @@ for data_point in data_output.splitlines():
     date, data_topic = data_point.split('|')
     commits.append({"date":date,"topic":data_topic})
 
-
+ 
 
 with open('C:\Drona\Backend(main files)\data.json','w') as file:
     json.dump(commits,file)
