@@ -36,6 +36,7 @@ commits = []
 for data_point in data_output.splitlines():
     date, data_topic = data_point.split('|')
     for category in categories:
+        category.split("/")
         commits.append({"date":date,"topic":data_topic,"category":category})
 
  
