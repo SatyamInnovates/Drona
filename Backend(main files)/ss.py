@@ -3,8 +3,8 @@ from datetime import datetime
 
 with open(r'C:\Drona\Backend(main files)\data.json') as f:
     commits = json.load(f)
-    print(commits)
-    print(len(commits))
+    
+    
 def get_streak(commits, category):
     
     dates = {

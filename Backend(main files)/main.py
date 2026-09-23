@@ -16,6 +16,7 @@ if status.stdout == "":
 
 lines = status.stdout.splitlines()
 topics = [topic_finding(line[3:]) for line in lines]   
+print("Topics found:", topics)
 message = "save " + " ".join(topics)
 print(message)
 
