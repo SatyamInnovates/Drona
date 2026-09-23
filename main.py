@@ -1,5 +1,6 @@
 import subprocess
 from topic import topic_finding
+import json
 
 repo = "C:\\Drona"
 
@@ -33,7 +34,10 @@ for data_point in data_output.splitlines():
     date, data_topic = data_point.split('|')
     commits.append({"date":date,"topic":data_topic})
 
-print(commits)
+
+
+with open('data.json','w') as file:
+    json.dump(commits,file)
 
 print("Pushed to github successfully")
 
