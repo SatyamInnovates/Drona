@@ -32,8 +32,9 @@ for data_point in data_output.splitlines():
     date = data_point.split('|')[0]
     data_topic = data_point.split('|')[1]
     print(date)
+    print(data_topic)
 
-print(data_output)
+
 
 print("Pushed to github successfully")
 
