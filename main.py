@@ -28,12 +28,12 @@ for cmd in (["git", "add", "."],
 
 data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
 
+commits = []
 for data_point in data_output.splitlines():
     date, data_topic = data_point.split('|')
-    print(date)
-    print(data_topic)
+    commits.append({date:data_topic})
 
-
+print(commits)
 
 print("Pushed to github successfully")
 
