@@ -26,8 +26,8 @@ for cmd in (["git", "add", "."],
         print(result.stderr)
         exit()
 
-data_output = run(['git','log','--format=%ad|%s','--date=short'])
+data_output = run(['git','log','--format=%ad|%s','--date=short'],capture_output=True,text=True,cwd=repo).stdout
 
-
+print(data_output)
 print("Pushed to github successfully")
 
