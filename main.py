@@ -29,8 +29,8 @@ for cmd in (["git", "add", "."],
 data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
 
 for data_point in data_output.splitlines():
-    print(data_point)
-    print("----------------")
+    date = [topic_finding(date[3:]) for date in data_point]
+    print(date)
 
 print(data_output)
 
