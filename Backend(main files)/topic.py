@@ -6,7 +6,6 @@ def topic_finding(path):
 
 def category_finding(path):
     print("PATH RECEIVED:", repr(path))
-    parts = path.replace("\\", "/").split("/")
-    
+    parts = path.replace("\\", "/").split("/")[-1]
     return parts[-2]   
 
