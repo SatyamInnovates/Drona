@@ -29,7 +29,7 @@ for cmd in (["git", "add", "."],
 data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
 
 for data_point in data_output.splitlines():
-    date = data_point.split('|')[:10]
+    date = data_point.split('|')[0]
     print(date)
 
 print(data_output)
