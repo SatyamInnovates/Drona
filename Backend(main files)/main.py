@@ -1,8 +1,6 @@
 import subprocess
 from topic import topic_finding,category_finding
 import json
-from pathlib import Path
-
 
 repo = r"C:\\Drona"
 
