@@ -20,7 +20,7 @@ print(lines)
 topics = [topic_finding(line[3:]) for line in lines]
 categories = [category_finding(line[3:]) for line in lines]
 print("Topics found:", topics)
-message = "save " + " ".join(topics)
+message = "save " + f"[{categories[0]}] " + " ".join(topics)
 print(message)
 
 for cmd in (["git", "add", "."],
@@ -36,9 +36,11 @@ data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
 commits = []
 for data_point in data_output.splitlines():
     date, data_topic = data_point.split('|')
-    for category in categories:
-        category.split("/")
-        commits.append({"date":date,"topic":data_topic,"category":category})
+
+    category_part = data_topic.split("[")[1]
+    category = category_part.split("]")[0]
+    data_topic = data_topic.replace(f"[{category}]"," ")
+    commits.append({"date":date,"topic":data_topic,"category":category})
 
  
 
