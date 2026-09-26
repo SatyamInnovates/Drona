@@ -1,1 +1,1 @@
-sfsdfs
+print("hello world")
