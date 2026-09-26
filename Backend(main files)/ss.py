@@ -1,7 +1,9 @@
 import json
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
-with open(r'C:\Drona\Backend(main files)\data.json') as f:
+backend_dir = Path(__file__).resolve().parent
+with (backend_dir / "data.json").open(encoding="utf-8") as f:
     commits = json.load(f)
     
     
@@ -13,7 +15,7 @@ def get_streak(commits, category):
         if c["category"] == category
     }
     
-    current = date.today() + timedelta(days=1)
+    current = date.today()
     streak = 0
     while current in dates:
         streak += 1
@@ -24,6 +26,6 @@ dsa_streak = get_streak(commits, "dsa")
 ml_streak = get_streak(commits, "Machine learning")
 streaks = {'dsa_streak':dsa_streak,'ml_streak':ml_streak}
 
-with open(r'C:\Drona\Backend(main files)\streaks.json','w') as f:
-    json.dump(streaks,f)
+with (backend_dir / "streaks.json").open("w", encoding="utf-8") as f:
+    json.dump(streaks, f)
     

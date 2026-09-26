@@ -2,8 +2,17 @@ import subprocess
 from topic import topic_finding,category_finding
 import json
 import re
+import sys
+from pathlib import Path
 
 repo = r"C:\\Drona"
+backend_dir = Path(__file__).resolve().parent
+
+def update_streaks():
+    result = run([sys.executable, str(backend_dir / "ss.py")])
+    if result.returncode != 0:
+        print(result.stderr)
+        exit(result.returncode)
 
 def run(cmd):
     return subprocess.run(cmd, capture_output=True, text=True, cwd=repo)
@@ -12,6 +21,7 @@ def run(cmd):
 status = run(["git", "status", "--porcelain", "--untracked-files=all"])
 if status.stdout == "":
     print("No changes to commit.")
+    update_streaks()
     exit()
 
 
@@ -52,9 +62,6 @@ for data_point in data_output.splitlines():
 with open(r'C:\Drona\Backend(main files)\data.json','w') as file:
     json.dump(commits,file)
 
-streak_update = run(["python", r"C:\Drona\Backend(main files)\ss.py"])
-if streak_update.returncode != 0:
-        print(streak_update.stderr)
-        exit()
+update_streaks()
 print("Pushed to github successfully")
 
