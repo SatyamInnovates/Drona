@@ -1,5 +1,5 @@
 import json
-from datetime import datetime,timedelta
+from datetime import date, datetime, timedelta
 
 with open(r'C:\Drona\Backend(main files)\data.json') as f:
     commits = json.load(f)
@@ -13,14 +13,13 @@ def get_streak(commits, category):
         if c["category"] == category
     }
     
-    current = datetime(2026, 9, 28).date()
+    current = date.today()
     streak = 0
     while current in dates:
         streak += 1
         current -= timedelta(days=1)
     return streak
 
-from datetime import timedelta
 dsa_streak = get_streak(commits, "dsa")
 ml_streak = get_streak(commits, "Machine learning")
 streaks = {'dsa_streak':dsa_streak,'ml_streak':ml_streak}
