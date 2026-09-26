@@ -15,7 +15,8 @@ def get_streak(commits, category):
         if c["category"] == category
     }
     
-    current = date.today()
+    today = date.today()
+    current = today if today in dates else today - timedelta(days=1)
     streak = 0
     while current in dates:
         streak += 1

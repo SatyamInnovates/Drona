@@ -28,6 +28,11 @@ if status.stdout == "":
 lines = status.stdout.splitlines()
 print(lines)
 content_lines = [line for line in lines if line[3:].replace('\\','/').split('/')[0].strip('"') == "learning"]
+if not content_lines:
+    print("No learning changes to commit.")
+    update_streaks()
+    exit()
+
 topics = [topic_finding(line[3:]) for line in content_lines]
 categories = [category_finding(line[3:]) for line in content_lines]
 print("Topics found:", topics)
