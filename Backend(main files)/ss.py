@@ -22,7 +22,7 @@ def get_streak(commits, category):
 
 from datetime import timedelta
 dsa_streak = get_streak(commits, "dsa")
-ml_streak = get_streak(commits, "ml")
+ml_streak = get_streak(commits, "Machine learning")
 streaks = {'dsa_streak':dsa_streak,'ml_streak':ml_streak}
 
 with open(r'C:\Drona\Backend(main files)\streaks.json','w') as f:
