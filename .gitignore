@@ -1,3 +1,5 @@
 .env
 __pycache__/
 *.pyc
+Backend(main files)/data.json
+Backend(main files)/streaks.json
