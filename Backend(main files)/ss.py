@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime,timedelta
 
 with open(r'C:\Drona\Backend(main files)\data.json') as f:
     commits = json.load(f)
@@ -23,5 +23,8 @@ def get_streak(commits, category):
 from datetime import timedelta
 dsa_streak = get_streak(commits, "dsa")
 ml_streak = get_streak(commits, "ml")
-print("DSA streak:", dsa_streak)
-print("ML streak:", ml_streak)
+streaks = {'dsa_streak':dsa_streak,'ml_streak':ml_streak}
+
+with open(r'C:\Drona\Backend(main files)\streaks.json','w') as f:
+    json.dump(streaks,f)
+    

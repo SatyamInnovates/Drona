@@ -2,6 +2,7 @@ import subprocess
 from topic import topic_finding,category_finding
 import json
 
+
 repo = r"C:\\Drona"
 
 def run(cmd):
@@ -44,6 +45,9 @@ for data_point in data_output.splitlines():
 with open(r'C:\Drona\Backend(main files)\data.json','w') as file:
     json.dump(commits,file)
 
-
+streak_update = run(["python", "ss.py"])
+if streak_update.returncode != 0:
+        print(streak_update.stderr)
+        exit()
 print("Pushed to github successfully")
 
