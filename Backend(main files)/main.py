@@ -23,7 +23,7 @@ categories = [category_finding(line[3:]) for line in content_lines]
 print("Topics found:", topics)
 messages = []
 for topic,category in zip(topics,categories):
-    messages.append("save " + f"[{category}] " + f" {topic}")
+    messages.append("save:" + f"[{category}]"+ f" {topic}")
 message = ' '.join(messages)
 print(messages)
 

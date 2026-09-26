@@ -1,1 +1,7 @@
-[{"date": "2026-09-27", "topic": "save   2pointer", "category": "dsa"}, {"date": "2026-09-27", "topic": "save  2pointer", "category": "dsa"}, {"date": "2026-09-27", "topic": "save  data binning 2pointer", "category": "Backend(main files)"}, {"date": "2026-09-27", "topic": "save  data streaks 2pointer", "category": "Backend(main files)"}, {"date": "2026-09-27", "topic": "save  binarization 2pointer", "category": "Machine learning"}, {"date": "2026-09-26", "topic": "save  data binarization 2pointer", "category": "Backend(main files)"}, {"date": "2026-09-26", "topic": "save  main", "category": "Backend(main files)"}, {"date": "2026-09-26", "topic": "save  main", "category": "Backend(main files)"}]
+[
+  {"date": "2026-09-27", "topic": "2pointer", "category": "dsa"},
+  {"date": "2026-09-26", "topic": "binary search", "category": "dsa"},
+  {"date": "2026-09-25", "topic": "arrays", "category": "dsa"},
+  {"date": "2026-09-27", "topic": "binning", "category": "ml"},
+  {"date": "2026-09-26", "topic": "encoding", "category": "ml"}
+]
