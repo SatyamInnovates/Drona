@@ -36,7 +36,8 @@ data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
 commits = []
 for data_point in data_output.splitlines():
     date, data_topic = data_point.split('|')
-
+    if '[' not in data_topic:
+        continue
     category_part = data_topic.split("[")[1]
     category = category_part.split("]")[0]
     data_topic = data_topic.replace(f"[{category}]"," ")
