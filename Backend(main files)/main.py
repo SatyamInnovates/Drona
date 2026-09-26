@@ -45,7 +45,7 @@ for data_point in data_output.splitlines():
 with open(r'C:\Drona\Backend(main files)\data.json','w') as file:
     json.dump(commits,file)
 
-streak_update = run(["python", "ss.py"])
+streak_update = run(["python", "C:\Drona\Backend(main files)\ss.py"])
 if streak_update.returncode != 0:
         print(streak_update.stderr)
         exit()
