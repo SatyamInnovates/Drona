@@ -27,7 +27,7 @@ if status.stdout == "":
 
 lines = status.stdout.splitlines()
 print(lines)
-content_lines = [line for line in lines if line[3:].replace('\\','/').split('/')[0].strip('"') == "learning"]
+content_lines = [line for line in lines if line[3:].replace('\\','/').split('/')[0].strip('"')]
 if not content_lines:
     print("No learning changes to commit.")
     update_streaks()
@@ -48,6 +48,7 @@ for cmd in (["git", "add", "."],
     result = run(cmd)
     if result.returncode != 0:
         print(result.stderr)
+        print("test01 completed")
         exit()
 
 data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
