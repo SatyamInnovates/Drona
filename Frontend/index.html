@@ -38,6 +38,28 @@
                     </article>
                 </div>
             </div>
+
+            <section id="container" class="timer-panel" aria-label="Focus timer">
+                <div class="timer-heading">
+                    <span class="timer-dot"></span>
+                    <span>Focus timer</span>
+                </div>
+                <div class="timer-readouts">
+                    <div class="timer-readout session-readout">
+                        <span class="readout-label">Session</span>
+                        <div id="display" aria-live="off">00:00:00</div>
+                    </div>
+                    <div class="timer-readout total-readout">
+                        <span class="readout-label">Total today</span>
+                        <div id="total" aria-live="polite">00:00:00:00</div>
+                    </div>
+                </div>
+                <div id="controls">
+                    <button id="start" onclick="start()">Start</button>
+                    <button id="stop" onclick="stop()">Stop</button>
+                    <button id="reset" onclick="reset()">Reset</button>
+                </div>
+            </section>
         </section>
     </main>
 
