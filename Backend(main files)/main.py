@@ -46,9 +46,10 @@ for cmd in (["git", "add", "."],
             ["git", "commit", "-m", message],
             ["git", "push"]):
     result = run(cmd)
+    print("test01 completed")
     if result.returncode != 0:
         print(result.stderr)
-        print("test01 completed")
+        
         exit()
 
 data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
