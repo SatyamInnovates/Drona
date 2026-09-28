@@ -3,28 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff">
     <link rel="stylesheet" href="style.css">
-    <title>Document</title>
+    <title>Drona | Learning dashboard</title>
 </head>
 <body>
-    <h1 id="heading">Drona</h1>
-    <p id="sub-heading">Your Planner and auto agent</p>
-    
-    <div class="streaks">
-    <div class="dsa-streak">
-        <span>DSA:</span>
-        <span id="dsa-streak"></span>
-    </div>
-    <div class="ml-streak">
-        <span>ML:</span>
-        <span id="ml-streak"></span>
-    </div>
-    </div>
-    
+    <main class="page-shell">
+        <header class="page-header">
+            <p class="eyebrow">YOUR LEARNING WORKSPACE</p>
+            <h1 id="heading">Drona</h1>
+            <p id="sub-heading">Your planner and auto agent</p>
+        </header>
 
-    
-    
+        <section class="dashboard-content" aria-labelledby="streak-heading">
+            <div class="streak-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">KEEP THE MOMENTUM</p>
+                        <h2 id="streak-heading">Learning streaks</h2>
+                    </div>
+                    <span class="live-indicator" aria-label="Current streaks">Current</span>
+                </div>
+
+                <div class="streaks">
+                    <article class="streak-card dsa-streak">
+                        <span class="streak-label">DSA</span>
+                        <span class="streak-value" id="dsa-streak" aria-live="polite">—</span>
+                        <span class="streak-caption">day streak</span>
+                    </article>
+                    <article class="streak-card ml-streak">
+                        <span class="streak-label">Machine learning</span>
+                        <span class="streak-value" id="ml-streak" aria-live="polite">—</span>
+                        <span class="streak-caption">day streak</span>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
     <script src="index.js"></script>
-    
 </body>
 </html>

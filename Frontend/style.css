@@ -1,141 +1,203 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+
+:root {
+    color-scheme: light;
+    font-family: 'DM Sans', 'Segoe UI', sans-serif;
+    color: #172033;
+    background: #fff;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 * {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
 }
 
 body {
+    min-width: 320px;
     min-height: 100vh;
-    background: #f4f5f7;
-    color: #171717;
-    font-family: Arial, sans-serif;
+    margin: 0;
+    background:
+        radial-gradient(ellipse at 50% 0, rgba(238, 243, 255, 0.75), transparent 38rem),
+        #fff;
+}
+
+.page-shell {
+    width: min(1120px, calc(100% - 48px));
+    margin: 0 auto;
+}
+
+.page-header {
+    padding: clamp(54px, 9vw, 100px) 0 48px;
+    text-align: center;
+}
+
+.eyebrow {
+    margin: 0;
+    color: #71809a;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1.4;
 }
 
 #heading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    min-height: 15vh;
-
-    font-size: clamp(3rem, 7vw, 6rem);
+    margin: 12px 0 5px;
+    color: #15213a;
+    font-family: 'Manrope', 'Segoe UI', sans-serif;
+    font-size: clamp(3.25rem, 8vw, 5rem);
     font-weight: 800;
-    letter-spacing: -3px;
+    letter-spacing: -0.075em;
+    line-height: 1.05;
 }
-
 
 #sub-heading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    min-height: 10vh;
-
-    font-size: clamp(1.5rem, 3vw, 2.5rem);
-    font-weight: 500;
-
-    color: #555;
+    margin: 0;
+    color: #68758a;
+    font-size: clamp(1rem, 2.3vw, 1.2rem);
+    font-weight: 400;
+    letter-spacing: -0.015em;
 }
 
+.dashboard-content {
+    display: flex;
+    justify-content: flex-start;
+    padding: 0 0 72px;
+}
 
-/* =========================
-   STREAK SECTION
-========================= */
+.streak-panel {
+    width: min(100%, 560px);
+    padding: 26px;
+    border: 1px solid #e7ebf2;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 14px 40px rgba(24, 39, 75, 0.07), 0 2px 7px rgba(24, 39, 75, 0.03);
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.section-heading h2 {
+    margin: 5px 0 0;
+    color: #1b2942;
+    font-family: 'Manrope', 'Segoe UI', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+}
+
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 10px;
+    border: 1px solid #e6ebf3;
+    border-radius: 999px;
+    color: #66738a;
+    background: #fbfcfe;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.live-indicator::before {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22a477;
+    content: '';
+}
 
 .streaks {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 35px;
-
-    width: min(900px, 90%);
-    margin: 40px auto;
-
-    padding: 45px;
-
-    background: #ffffff;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 28px;
-
-    box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.06);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
 }
 
-
-
-
-.ml-streak,
-.dsa-streak {
-    position: relative;
-
+.streak-card {
     display: flex;
+    min-height: 154px;
     flex-direction: column;
+    align-items: flex-start;
     justify-content: center;
-    align-items: center;
-
-    width: 180px;
-    height: 180px;
-
-    border-radius: 28px;
-
-    color: white;
-
-    font-size: 1.2rem;
-    font-weight: 600;
-
-    box-shadow:
-        0 10px 25px rgba(0, 0, 0, 0.12);
-
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease;
+    padding: 20px;
+    border: 1px solid #e8edf5;
+    border-radius: 15px;
+    background: #f9fbff;
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
-
-
+.streak-card:hover {
+    transform: translateY(-3px);
+    border-color: #d9e2f1;
+    box-shadow: 0 10px 22px rgba(24, 39, 75, 0.07);
+}
 
 .ml-streak {
-    background: linear-gradient(
-        135deg,
-        #7c3aed,
-        #9333ea
-    );
+    background: #fbfaff;
 }
 
-.dsa-streak {
-    background: linear-gradient(
-        135deg,
-        #2563eb,
-        #3b82f6
-    );
+.streak-label {
+    color: #68758a;
+    font-size: 0.82rem;
+    font-weight: 600;
 }
 
-
-
-.ml-streak:hover,
-.dsa-streak:hover {
-    transform: translateY(-8px);
-
-    box-shadow:
-        0 18px 35px rgba(0, 0, 0, 0.18);
+.streak-value {
+    margin-top: 9px;
+    color: #315fca;
+    font-family: 'Manrope', 'Segoe UI', sans-serif;
+    font-size: 2.55rem;
+    font-weight: 800;
+    letter-spacing: -0.07em;
+    line-height: 1;
 }
 
+.ml-streak .streak-value {
+    color: #7656c8;
+}
 
-@media (max-width: 600px) {
+.streak-caption {
+    margin-top: 5px;
+    color: #8994a7;
+    font-size: 0.78rem;
+}
+
+@media (max-width: 560px) {
+    .page-shell {
+        width: min(100% - 32px, 440px);
+    }
+
+    .page-header {
+        padding: 56px 0 36px;
+    }
+
+    .streak-panel {
+        padding: 20px;
+    }
 
     .streaks {
-        flex-direction: column;
-        padding: 30px;
+        grid-template-columns: 1fr;
+        gap: 10px;
     }
 
-    .ml-streak,
-    .dsa-streak {
-        width: 160px;
-        height: 160px;
+    .streak-card {
+        min-height: 132px;
     }
+}
 
-    #heading {
-        letter-spacing: -2px;
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
     }
 }
