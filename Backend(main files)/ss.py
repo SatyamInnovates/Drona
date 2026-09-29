@@ -9,9 +9,8 @@ with (backend_dir / "data.json").open(encoding="utf-8") as f:
 for commit in commits:
     commit["topic"] = commit["topic"].removeprefix("save:").strip()
     
-    
+      
 def get_streak(commits, category):
-    
     dates = {
         datetime.strptime(c["date"], "%Y-%m-%d").date()
         for c in commits
