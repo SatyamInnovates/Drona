@@ -196,6 +196,79 @@ body {
     box-shadow: 0 14px 40px rgba(24, 39, 75, 0.07), 0 2px 7px rgba(24, 39, 75, 0.03);
 }
 
+.topics-panel {
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 26px;
+    border: 1px solid #e7ebf2;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 14px 40px rgba(24, 39, 75, 0.07), 0 2px 7px rgba(24, 39, 75, 0.03);
+}
+
+.topics-panel .section-heading {
+    margin-bottom: 16px;
+}
+
+.topic-count {
+    display: inline-grid;
+    min-width: 34px;
+    height: 34px;
+    place-items: center;
+    padding: 0 10px;
+    border-radius: 999px;
+    color: #315fca;
+    background: #edf2ff;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.topic-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.topic-item {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid #e8edf5;
+    border-radius: 12px;
+    background: #f9fbff;
+}
+
+.topic-name {
+    overflow-wrap: anywhere;
+    color: #1d2b45;
+    font-weight: 600;
+}
+
+.topic-category {
+    flex: none;
+    padding: 5px 8px;
+    border-radius: 999px;
+    color: #526078;
+    background: #edf0f6;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.topic-empty {
+    grid-column: 1 / -1;
+    padding: 18px;
+    border: 1px dashed #dce3ef;
+    border-radius: 12px;
+    color: #7b879b;
+    text-align: center;
+}
+
 .section-heading {
     display: flex;
     align-items: center;
@@ -309,6 +382,10 @@ body {
     }
 
     .streak-panel {
+        padding: 20px;
+    }
+
+    .topics-panel {
         padding: 20px;
     }
 

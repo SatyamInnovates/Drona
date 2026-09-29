@@ -9,6 +9,51 @@ fetch('../Backend(main files)/streaks.json')
         dsa_streak.textContent = data.dsa_streak;
     })
 
+const todayTopics = document.getElementById('today-topics');
+const topicCount = document.getElementById('topic-count');
+
+fetch('../Backend(main files)/today_topics.json')
+    .then(response => {
+        if (!response.ok) throw new Error('Could not load today\'s topics');
+        return response.json();
+    })
+    .then(topics => {
+        todayTopics.replaceChildren();
+        topicCount.textContent = topics.length;
+
+        if (topics.length === 0) {
+            const empty = document.createElement('li');
+            empty.className = 'topic-empty';
+            empty.textContent = 'No topics recorded today yet.';
+            todayTopics.appendChild(empty);
+            return;
+        }
+
+        topics.forEach(topic => {
+            const item = document.createElement('li');
+            item.className = 'topic-item';
+
+            const name = document.createElement('span');
+            name.className = 'topic-name';
+            name.textContent = topic.topic;
+
+            const category = document.createElement('span');
+            category.className = 'topic-category';
+            category.textContent = topic.category;
+
+            item.append(name, category);
+            todayTopics.appendChild(item);
+        });
+    })
+    .catch(() => {
+        todayTopics.replaceChildren();
+        topicCount.textContent = '—';
+        const error = document.createElement('li');
+        error.className = 'topic-empty';
+        error.textContent = 'Today’s topics are unavailable.';
+        todayTopics.appendChild(error);
+    });
+
 
 
 

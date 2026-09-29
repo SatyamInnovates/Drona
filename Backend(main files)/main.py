@@ -48,7 +48,7 @@ for cmd in (["git", "add", "."],
     result = run(cmd)
     print("test01 completed")
     if result.returncode != 0:
-        print(result.stderr)
+        print(result.stderr)    
         
         exit()
 
@@ -60,7 +60,8 @@ for data_point in data_output.splitlines():
     matches = re.findall(r'\[([^\]]+)\]', data_topic)
     if not matches:
         continue
-    clean_topic = re.sub(r'\[[^\]]+\]', '', data_topic).strip()
+    clean_topic = re.sub(r'\[[^\]]+\]', '', data_topic)
+    clean_topic = re.sub(r'^\s*save\s*:?\s*', '', clean_topic).strip()
     for category in matches:
         commits.append({"date": date, "topic": clean_topic, "category": category})
 
