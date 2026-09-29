@@ -217,7 +217,7 @@ body {
     place-items: center;
     padding: 0 10px;
     border-radius: 999px;
-    color: #315fca;
+    color: #1455ec;
     background: #edf2ff;
     font-size: 0.85rem;
     font-weight: 700;
@@ -241,7 +241,7 @@ body {
     padding: 14px 16px;
     border: 1px solid #e8edf5;
     border-radius: 12px;
-    background: #f9fbff;
+    background: #dadde4;
 }
 
 .topic-name {
@@ -266,12 +266,6 @@ body {
     font-weight: 700;
 }
 
-.topic-added {
-    flex: none;
-    color: #22a477;
-    font-size: 0.72rem;
-    font-weight: 700;
-}
 
 .topic-empty {
     grid-column: 1 / -1;
