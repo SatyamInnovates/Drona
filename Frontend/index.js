@@ -24,36 +24,39 @@ fetch('../Backend(main files)/today_topics.json')
         if (topics.length === 0) {
             const empty = document.createElement('li');
             empty.className = 'topic-empty';
-            empty.textContent = 'No topics recorded today yet.';
-            todayTopics.appendChild(empty);
+            empty.textContent = "There aren't any topics recorded today.";
+            todayTopics.append(empty);
             return;
         }
 
-        topics.forEach(topic => {
+        topics.forEach(data => {
             const item = document.createElement('li');
             item.className = 'topic-item';
 
-            const name = document.createElement('span');
-            name.className = 'topic-name';
-            name.textContent = topic.topic;
+
+            const topic = document.createElement('span');
+            topic.className = 'topic-name';
+            topic.textContent = data.topic;
 
             const category = document.createElement('span');
             category.className = 'topic-category';
-            category.textContent = topic.category;
+            category.textContent = data.category;
 
-            item.append(name, category);
-            todayTopics.appendChild(item);
+            
+            
+            item.append(topic, category);
+            todayTopics.append(item);
         });
     })
     .catch(() => {
         todayTopics.replaceChildren();
         topicCount.textContent = '—';
+
         const error = document.createElement('li');
         error.className = 'topic-empty';
         error.textContent = 'Today’s topics are unavailable.';
-        todayTopics.appendChild(error);
+        todayTopics.append(error);
     });
-
 
 
 

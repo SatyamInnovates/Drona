@@ -250,13 +250,26 @@ body {
     font-weight: 600;
 }
 
+.topic-details {
+    display: grid;
+    min-width: 0;
+    gap: 6px;
+}
+
 .topic-category {
-    flex: none;
+    width: fit-content;
     padding: 5px 8px;
     border-radius: 999px;
     color: #526078;
     background: #edf0f6;
     font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.topic-added {
+    flex: none;
+    color: #22a477;
+    font-size: 0.72rem;
     font-weight: 700;
 }
 
