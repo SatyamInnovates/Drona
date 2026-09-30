@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from config import repo
 from topic import category_finding
+from settings import load_category, FOLDER_CATEGORY
 
 backend_dir = Path(__file__).resolve().parent
 with (backend_dir / "data.json").open(encoding="utf-8") as f:
@@ -14,7 +15,12 @@ for commit in commits:
       
 def get_streak(commits, category):
     def matches_category(value):
-        normalized = category_finding(value, repo).strip().lower()
+        selected = load_category()
+        normalized = (
+            category_finding(value, repo)
+            if selected == FOLDER_CATEGORY
+            else selected
+        ).strip().lower()
         return normalized == category.lower()
 
     dates = {
@@ -42,7 +48,11 @@ for commit in commits:
         today_topics.append({
             "date": commit["date"],
             "topic": commit["topic"],
-            "category": commit["category"],
+            "category": (
+                category_finding(commit["category"], repo)
+                if load_category() == FOLDER_CATEGORY
+                else load_category()
+            ),
         })
 
 with (backend_dir / "streaks.json").open("w", encoding="utf-8") as f:

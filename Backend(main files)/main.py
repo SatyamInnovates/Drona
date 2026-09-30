@@ -5,6 +5,7 @@ import re
 import sys
 from pathlib import Path
 from config import repo
+from settings import choose_category, FOLDER_CATEGORY
 
 backend_dir = Path(__file__).resolve().parent
 
@@ -18,39 +19,36 @@ def run(cmd):
     return subprocess.run(cmd, capture_output=True, text=True, cwd=str(repo))
 
 
+selected_category = choose_category()
 status = run(["git", "status", "--porcelain", "--untracked-files=all"])
+if status.returncode != 0:
+    print(status.stderr)
+    exit(status.returncode)
+
 if status.stdout == "":
     print("No changes to commit.")
-    update_streaks()
-    exit()
+else:
+    lines = status.stdout.splitlines()
+    print(lines)
+    content_lines = [line for line in lines if line[3:].replace('\\','/').split('/')[0].strip('"')]
+    if content_lines:
+        topics = [topic_finding(line[3:]) for line in content_lines]
+        categories = [
+            category_finding(line[3:], repo) if selected_category == FOLDER_CATEGORY else selected_category
+            for line in content_lines
+        ]
+        print("Topics found:", topics)
+        messages = [f"save:[{category}] {topic}" for topic, category in zip(topics, categories)]
+        message = ' '.join(messages)
+        print(messages)
 
-
-lines = status.stdout.splitlines()
-print(lines)
-content_lines = [line for line in lines if line[3:].replace('\\','/').split('/')[0].strip('"')]
-if not content_lines:
-    print("No learning changes to commit.")
-    update_streaks()
-    exit()
-
-topics = [topic_finding(line[3:]) for line in content_lines]
-categories = [category_finding(line[3:], repo) for line in content_lines]
-print("Topics found:", topics)
-messages = []
-for topic,category in zip(topics,categories):
-    messages.append("save:" + f"[{category}]"+ f" {topic}")
-message = ' '.join(messages)
-print(messages)
-
-for cmd in (["git", "add", "."],
-            ["git", "commit", "-m", message],
-            ["git", "push" , "origin" , "main"]):
-    result = run(cmd)
-    print("test01 completed")
-    if result.returncode != 0:
-        print(result.stderr)    
-        
-        exit()
+        for cmd in (["git", "add", "."],
+                    ["git", "commit", "-m", message],
+                    ["git", "push", "origin", "main"]):
+            result = run(cmd)
+            if result.returncode != 0:
+                print(result.stderr)
+                exit(result.returncode)
 
 data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
 
@@ -63,7 +61,7 @@ for data_point in data_output.splitlines():
     clean_topic = re.sub(r'\[[^\]]+\]', '', data_topic)
     clean_topic = re.sub(r'^\s*save\s*:?\s*', '', clean_topic).strip()
     for category in matches:
-        category = category_finding(category, repo)
+        category = category_finding(category, repo) if selected_category == FOLDER_CATEGORY else selected_category
         commits.append({"date": date, "topic": clean_topic, "category": category})
 
  
@@ -72,5 +70,6 @@ with open(r'C:\Drona\Backend(main files)\data.json','w') as file:
     json.dump(commits,file)
 
 update_streaks()
-print("Pushed to github successfully")
+if status.stdout:
+    print("Pushed to github successfully")
 
