@@ -44,7 +44,7 @@ print(messages)
 
 for cmd in (["git", "add", "."],
             ["git", "commit", "-m", message],
-            ["git", "push"]):
+            ["git", "push" , "origin" , "main"]):
     result = run(cmd)
     print("test01 completed")
     if result.returncode != 0:
