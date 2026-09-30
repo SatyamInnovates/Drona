@@ -1,6 +1,8 @@
 import json
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from config import repo
+from topic import category_finding
 
 backend_dir = Path(__file__).resolve().parent
 with (backend_dir / "data.json").open(encoding="utf-8") as f:
@@ -11,10 +13,14 @@ for commit in commits:
     
       
 def get_streak(commits, category):
+    def matches_category(value):
+        normalized = category_finding(value, repo).strip().lower()
+        return normalized == category.lower()
+
     dates = {
         datetime.strptime(c["date"], "%Y-%m-%d").date()
         for c in commits
-        if c["category"] == category
+        if matches_category(c["category"])
     }
     
     today = date.today()

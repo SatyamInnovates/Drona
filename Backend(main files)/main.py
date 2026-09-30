@@ -4,8 +4,8 @@ import json
 import re
 import sys
 from pathlib import Path
+from config import repo
 
-repo = r"C:\\Drona"
 backend_dir = Path(__file__).resolve().parent
 
 def update_streaks():
@@ -15,7 +15,7 @@ def update_streaks():
         exit(result.returncode)
 
 def run(cmd):
-    return subprocess.run(cmd, capture_output=True, text=True, cwd=repo)
+    return subprocess.run(cmd, capture_output=True, text=True, cwd=str(repo))
 
 
 status = run(["git", "status", "--porcelain", "--untracked-files=all"])
@@ -34,7 +34,7 @@ if not content_lines:
     exit()
 
 topics = [topic_finding(line[3:]) for line in content_lines]
-categories = [category_finding(line[3:]) for line in content_lines]
+categories = [category_finding(line[3:], repo) for line in content_lines]
 print("Topics found:", topics)
 messages = []
 for topic,category in zip(topics,categories):
@@ -63,6 +63,7 @@ for data_point in data_output.splitlines():
     clean_topic = re.sub(r'\[[^\]]+\]', '', data_topic)
     clean_topic = re.sub(r'^\s*save\s*:?\s*', '', clean_topic).strip()
     for category in matches:
+        category = category_finding(category, repo)
         commits.append({"date": date, "topic": clean_topic, "category": category})
 
  
