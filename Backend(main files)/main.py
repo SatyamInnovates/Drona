@@ -61,7 +61,6 @@ for data_point in data_output.splitlines():
     clean_topic = re.sub(r'\[[^\]]+\]', '', data_topic)
     clean_topic = re.sub(r'^\s*save\s*:?\s*', '', clean_topic).strip()
     for category in matches:
-        category = category_finding(category, repo) if selected_category == FOLDER_CATEGORY else selected_category
         commits.append({"date": date, "topic": clean_topic, "category": category})
 
  

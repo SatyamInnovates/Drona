@@ -1,8 +1,6 @@
 import json
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from config import repo
-from topic import category_finding
 from settings import load_category, FOLDER_CATEGORY
 
 backend_dir = Path(__file__).resolve().parent
@@ -14,19 +12,10 @@ for commit in commits:
     
       
 def get_streak(commits, category):
-    def matches_category(value):
-        selected = load_category()
-        normalized = (
-            category_finding(value, repo)
-            if selected == FOLDER_CATEGORY
-            else selected
-        ).strip().lower()
-        return normalized == category.lower()
-
     dates = {
         datetime.strptime(c["date"], "%Y-%m-%d").date()
         for c in commits
-        if matches_category(c["category"])
+        if c["category"].strip().casefold() == category.strip().casefold()
     }
     
     today = date.today()
@@ -40,6 +29,10 @@ def get_streak(commits, category):
 dsa_streak = get_streak(commits, "dsa")
 ml_streak = get_streak(commits, "Machine learning")
 streaks = {'dsa_streak':dsa_streak,'ml_streak':ml_streak}
+selected_category = load_category()
+if selected_category != FOLDER_CATEGORY:
+    streaks['selected_category'] = selected_category
+    streaks['selected_category_streak'] = get_streak(commits, selected_category)
 
 today_topics = []
 today = date.today().isoformat()
@@ -48,11 +41,7 @@ for commit in commits:
         today_topics.append({
             "date": commit["date"],
             "topic": commit["topic"],
-            "category": (
-                category_finding(commit["category"], repo)
-                if load_category() == FOLDER_CATEGORY
-                else load_category()
-            ),
+            "category": commit["category"],
         })
 
 with (backend_dir / "streaks.json").open("w", encoding="utf-8") as f:

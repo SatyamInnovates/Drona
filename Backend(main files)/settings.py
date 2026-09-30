@@ -5,6 +5,7 @@ from pathlib import Path
 backend_dir = Path(__file__).resolve().parent
 settings_file = backend_dir / "repo_settings.json"
 FOLDER_CATEGORY = "Use folder category"
+CUSTOM_CATEGORY = "Choose my own category"
 
 
 def load_category():
@@ -19,10 +20,11 @@ def load_category():
 
 def choose_category():
     current = load_category()
-    choices = ["Machine learning", "DSA", FOLDER_CATEGORY]
+    choices = ["Machine learning", "DSA", FOLDER_CATEGORY, CUSTOM_CATEGORY]
     print("Choose the category for this repository:")
     for number, choice in enumerate(choices, start=1):
-        marker = " (current)" if choice == current else ""
+        is_current = choice == current or (choice == CUSTOM_CATEGORY and current not in choices)
+        marker = f" (current: {current})" if is_current and choice == CUSTOM_CATEGORY else " (current)" if is_current else ""
         print(f"{number}. {choice}{marker}")
 
     while True:
@@ -32,6 +34,11 @@ def choose_category():
             break
         if answer in {str(number) for number in range(1, len(choices) + 1)}:
             selected = choices[int(answer) - 1]
+            if selected == CUSTOM_CATEGORY:
+                selected = input("Enter your category name: ").strip()
+                if not selected:
+                    print("Category cannot be empty.")
+                    continue
             break
         print("Choose one of the listed numbers.")
 
