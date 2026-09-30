@@ -23,8 +23,12 @@ def choose_category():
     choices = ["Machine learning", "DSA", FOLDER_CATEGORY, CUSTOM_CATEGORY]
     print("Choose the category for this repository:")
     for number, choice in enumerate(choices, start=1):
-        is_current = choice == current or (choice == CUSTOM_CATEGORY and current not in choices)
-        marker = f" (current: {current})" if is_current and choice == CUSTOM_CATEGORY else " (current)" if is_current else ""
+        if choice == current:
+            marker = " (current)"
+        elif choice == CUSTOM_CATEGORY and current not in choices:
+            marker = f" (current: {current})"
+        else:
+            marker = ""
         print(f"{number}. {choice}{marker}")
 
     while True:

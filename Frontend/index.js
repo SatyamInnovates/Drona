@@ -1,5 +1,8 @@
 const ml_streak = document.getElementById('ml-streak');
 const dsa_streak = document.getElementById('dsa-streak');
+const selectedCategoryCard = document.getElementById('selected-category-card');
+const selectedCategoryLabel = document.getElementById('selected-category-label');
+const selectedCategoryValue = document.getElementById('selected-category-value');
 
 
 fetch('../Backend(main files)/streaks.json')
@@ -7,6 +10,13 @@ fetch('../Backend(main files)/streaks.json')
     .then(data => {
         ml_streak.textContent = data.ml_streak;
         dsa_streak.textContent = data.dsa_streak;
+        const selectedCategory = data.selected_category;
+        const builtInCategories = ['dsa', 'machine learning'];
+        if (selectedCategory && !builtInCategories.includes(selectedCategory.trim().toLowerCase())) {
+            selectedCategoryLabel.textContent = selectedCategory;
+            selectedCategoryValue.textContent = data.selected_category_streak;
+            selectedCategoryCard.hidden = false;
+        }
     })
 
 const todayTopics = document.getElementById('today-topics');
