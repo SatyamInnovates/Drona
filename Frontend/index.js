@@ -68,6 +68,57 @@ fetch('../Backend(main files)/today_topics.json')
         todayTopics.append(error);
     });
 
+// Yesterday's focus time is stored by the existing daily timer key.
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+document.getElementById('yesterday-date').textContent = yesterday.toLocaleDateString(undefined, {
+    weekday: 'short', month: 'short', day: 'numeric'
+});
+const yesterdayKey = 'sessions-' + yesterday.toDateString();
+let yesterdaySessions = [];
+try {
+    yesterdaySessions = JSON.parse(localStorage.getItem(yesterdayKey) || '[]');
+    if (!Array.isArray(yesterdaySessions)) yesterdaySessions = [];
+} catch {
+    yesterdaySessions = [];
+}
+const yesterdayMs = yesterdaySessions.reduce((sum, duration) => sum + (Number(duration) || 0), 0);
+document.getElementById('yesterday-hours').textContent = formatTime(yesterdayMs);
+
+const yesterdayFiles = document.getElementById('yesterday-files');
+const yesterdayFileCount = document.getElementById('yesterday-file-count');
+fetch('../Backend(main files)/yesterday_files.json')
+    .then(response => {
+        if (!response.ok) throw new Error('Could not load yesterday’s GitHub files');
+        return response.json();
+    })
+    .then(files => {
+        yesterdayFiles.replaceChildren();
+        yesterdayFileCount.textContent = `${files.length} ${files.length === 1 ? 'file' : 'files'}`;
+        if (!files.length) {
+            const empty = document.createElement('li');
+            empty.className = 'topic-empty';
+            empty.textContent = 'No files were committed yesterday.';
+            yesterdayFiles.append(empty);
+            return;
+        }
+        files.forEach(path => {
+            const item = document.createElement('li');
+            item.className = 'file-item';
+            item.textContent = path;
+            item.title = path;
+            yesterdayFiles.append(item);
+        });
+    })
+    .catch(() => {
+        yesterdayFiles.replaceChildren();
+        yesterdayFileCount.textContent = 'Unavailable';
+        const error = document.createElement('li');
+        error.className = 'topic-empty';
+        error.textContent = 'Run the tracker to refresh yesterday’s GitHub activity.';
+        yesterdayFiles.append(error);
+    });
+
 
 
 // Timer 

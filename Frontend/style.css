@@ -206,6 +206,112 @@ body {
     box-shadow: 0 14px 40px rgba(24, 39, 75, 0.07), 0 2px 7px rgba(24, 39, 75, 0.03);
 }
 
+.yesterday-panel {
+    grid-column: 1 / -1;
+    padding: 26px;
+    border: 1px solid #e7ebf2;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #fff 0%, #f7f9ff 100%);
+    box-shadow: 0 14px 40px rgba(24, 39, 75, 0.07), 0 2px 7px rgba(24, 39, 75, 0.03);
+}
+
+.yesterday-date {
+    padding: 7px 11px;
+    border: 1px solid #e6ebf3;
+    border-radius: 999px;
+    color: #66738a;
+    background: #fff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.yesterday-summary {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.5fr);
+    gap: 14px;
+}
+
+.hours-card,
+.files-card {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid #e8edf5;
+    border-radius: 15px;
+    background: #fff;
+}
+
+.hours-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: linear-gradient(145deg, #eff4ff, #fbfcff);
+}
+
+.hours-card strong {
+    color: #315fca;
+    font-family: 'Manrope', 'Segoe UI', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.06em;
+}
+
+.hours-caption {
+    margin-top: 5px;
+    color: #7b879b;
+    font-size: 0.78rem;
+}
+
+.files-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.files-heading strong {
+    display: block;
+    color: #1d2b45;
+    font-family: 'Manrope', 'Segoe UI', sans-serif;
+    font-size: 1.08rem;
+}
+
+.github-mark {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: 12px;
+    color: #fff;
+    background: #202938;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+}
+
+.file-list {
+    display: grid;
+    max-height: 220px;
+    gap: 7px;
+    overflow: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.file-item {
+    overflow: hidden;
+    padding: 9px 11px;
+    border: 1px solid #edf0f5;
+    border-radius: 9px;
+    color: #43516a;
+    background: #fafbfe;
+    font-family: 'Consolas', 'SFMono-Regular', monospace;
+    font-size: 0.78rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .topics-panel .section-heading {
     margin-bottom: 16px;
 }
@@ -398,6 +504,14 @@ body {
 
     .topics-panel {
         padding: 20px;
+    }
+
+    .yesterday-panel {
+        padding: 20px;
+    }
+
+    .yesterday-summary {
+        grid-template-columns: 1fr;
     }
 
     .streaks {

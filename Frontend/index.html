@@ -78,6 +78,35 @@
                     <button id="reset" onclick="reset()">Reset</button>
                 </div>
             </section>
+
+            <section class="yesterday-panel" aria-labelledby="yesterday-heading">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">A LOOK BACK</p>
+                        <h2 id="yesterday-heading">Yesterday</h2>
+                    </div>
+                    <span class="yesterday-date" id="yesterday-date"></span>
+                </div>
+                <div class="yesterday-summary">
+                    <div class="hours-card">
+                        <span class="readout-label">Coding time</span>
+                        <strong id="yesterday-hours">00:00:00</strong>
+                        <span class="hours-caption">tracked in your focus timer</span>
+                    </div>
+                    <div class="files-card">
+                        <div class="files-heading">
+                            <div>
+                                <span class="readout-label">GitHub activity</span>
+                                <strong id="yesterday-file-count">0 files</strong>
+                            </div>
+                            <span class="github-mark" aria-hidden="true">GH</span>
+                        </div>
+                        <ul id="yesterday-files" class="file-list" aria-live="polite">
+                            <li class="topic-empty">Loading yesterday’s files…</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
         </section>
     </main>
 

@@ -4,6 +4,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from datetime import date, timedelta
 from config import repo
 from settings import choose_category, FOLDER_CATEGORY
 
@@ -52,6 +53,15 @@ else:
 
 data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
 
+# Files included in commits made yesterday (the same commits sent to origin).
+yesterday = date.today() - timedelta(days=1)
+today = yesterday + timedelta(days=1)
+file_output = run([
+    'git', 'log', 'origin/main', '--since', yesterday.isoformat(), '--until', today.isoformat(),
+    '--format=', '--name-only', '--diff-filter=ACMR'
+]).stdout
+yesterday_files = sorted({line.strip().replace('\\', '/') for line in file_output.splitlines() if line.strip()})
+
 commits = []
 for data_point in data_output.splitlines():
     date, data_topic = data_point.split('|')
@@ -67,6 +77,9 @@ for data_point in data_output.splitlines():
 
 with open(r'C:\Drona\Backend(main files)\data.json','w') as file:
     json.dump(commits,file)
+
+with (backend_dir / 'yesterday_files.json').open('w', encoding='utf-8') as file:
+    json.dump(yesterday_files, file, ensure_ascii=False)
 
 update_streaks()
 if status.stdout:
