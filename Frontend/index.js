@@ -1,8 +1,11 @@
-const ml_streak = document.getElementById('ml-streak');
+﻿const ml_streak = document.getElementById('ml-streak');
 const dsa_streak = document.getElementById('dsa-streak');
 const selectedCategoryCard = document.getElementById('selected-category-card');
 const selectedCategoryLabel = document.getElementById('selected-category-label');
 const selectedCategoryValue = document.getElementById('selected-category-value');
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+const localIsoDate = value => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
 
 
 fetch('../Backend(main files)/streaks.json')
@@ -22,55 +25,74 @@ fetch('../Backend(main files)/streaks.json')
 const todayTopics = document.getElementById('today-topics');
 const topicCount = document.getElementById('topic-count');
 
-fetch('../Backend(main files)/today_topics.json')
+function renderTopicList(list, topics, emptyMessage) {
+    list.replaceChildren();
+    if (!topics.length) {
+        const empty = document.createElement('li');
+        empty.className = 'topic-empty';
+        empty.textContent = emptyMessage;
+        list.append(empty);
+        return;
+    }
+    topics.forEach(data => {
+        const item = document.createElement('li');
+        item.className = 'topic-item';
+        const name = document.createElement('span');
+        name.className = 'topic-name';
+        name.textContent = data.topic;
+        const category = document.createElement('span');
+        category.className = 'topic-category';
+        category.textContent = data.category;
+        item.append(name, category);
+        list.append(item);
+    });
+}
+
+const todayIso = localIsoDate(new Date());
+const yesterdayIso = localIsoDate(yesterday);
+const historyToggle = document.getElementById('history-toggle');
+const historyDrawer = document.getElementById('yesterday-topics-drawer');
+const yesterdayTopicsList = document.getElementById('yesterday-topics-list');
+const yesterdayTopicDate = document.getElementById('drawer-date');
+yesterdayTopicDate.textContent = yesterday.toLocaleDateString(undefined, {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+});
+
+function setHistoryOpen(isOpen) {
+    historyDrawer.classList.toggle('is-open', isOpen);
+    historyDrawer.setAttribute('aria-hidden', String(!isOpen));
+    historyToggle.setAttribute('aria-expanded', String(isOpen));
+}
+
+historyToggle.addEventListener('click', () => setHistoryOpen(true));
+document.getElementById('drawer-close').addEventListener('click', () => setHistoryOpen(false));
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') setHistoryOpen(false);
+});
+
+fetch('../Backend(main files)/data.json?day=' + todayIso, { cache: 'no-store' })
     .then(response => {
-        if (!response.ok) throw new Error('Could not load today\'s topics');
+        if (!response.ok) throw new Error('Could not load saved topic history');
         return response.json();
     })
-    .then(topics => {
-        todayTopics.replaceChildren();
-        topicCount.textContent = topics.length;
-
-        if (topics.length === 0) {
-            const empty = document.createElement('li');
-            empty.className = 'topic-empty';
-            empty.textContent = "There aren't any topics recorded today.";
-            todayTopics.append(empty);
-            return;
-        }
-
-        topics.forEach(data => {
-            const item = document.createElement('li');
-            item.className = 'topic-item';
-
-
-            const topic = document.createElement('span');
-            topic.className = 'topic-name';
-            topic.textContent = data.topic;
-
-            const category = document.createElement('span');
-            category.className = 'topic-category';
-            category.textContent = data.category;
-
-            
-            
-            item.append(topic, category);
-            todayTopics.append(item);
-        });
+    .then(commits => {
+        const todayItems = commits.filter(commit => commit.date === todayIso);
+        const yesterdayItems = commits.filter(commit => commit.date === yesterdayIso);
+        topicCount.textContent = todayItems.length;
+        renderTopicList(todayTopics, todayItems, "There aren't any topics recorded today.");
+        renderTopicList(yesterdayTopicsList, yesterdayItems, 'No topics were recorded yesterday.');
     })
     .catch(() => {
-        todayTopics.replaceChildren();
         topicCount.textContent = '—';
-
-        const error = document.createElement('li');
-        error.className = 'topic-empty';
-        error.textContent = 'Today’s topics are unavailable.';
-        todayTopics.append(error);
+        renderTopicList(todayTopics, [], 'Today’s topics are unavailable. Run the tracker to refresh.');
+        renderTopicList(yesterdayTopicsList, [], 'Yesterday’s topics are unavailable. Run the tracker to refresh.');
     });
+// Reload at local midnight so the date labels and day-specific data roll over.
+const tomorrow = new Date();
+tomorrow.setHours(24, 0, 1, 0);
+setTimeout(() => window.location.reload(), tomorrow.getTime() - Date.now());
 
 // Yesterday's focus time is stored by the existing daily timer key.
-const yesterday = new Date();
-yesterday.setDate(yesterday.getDate() - 1);
 document.getElementById('yesterday-date').textContent = yesterday.toLocaleDateString(undefined, {
     weekday: 'short', month: 'short', day: 'numeric'
 });
@@ -87,7 +109,7 @@ document.getElementById('yesterday-hours').textContent = formatTime(yesterdayMs)
 
 const yesterdayFiles = document.getElementById('yesterday-files');
 const yesterdayFileCount = document.getElementById('yesterday-file-count');
-fetch('../Backend(main files)/yesterday_files.json')
+fetch('../Backend(main files)/yesterday_files.json?day=' + localIsoDate(yesterday), { cache: 'no-store' })
     .then(response => {
         if (!response.ok) throw new Error('Could not load yesterday’s GitHub files');
         return response.json();
@@ -181,3 +203,4 @@ function showTotal(){
 }
 
 showTotal();   
+

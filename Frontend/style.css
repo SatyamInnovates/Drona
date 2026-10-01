@@ -197,6 +197,8 @@ body {
 }
 
 .topics-panel {
+    position: relative;
+    overflow: hidden;
     grid-column: 1 / -1;
     width: 100%;
     padding: 26px;
@@ -204,6 +206,88 @@ body {
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.94);
     box-shadow: 0 14px 40px rgba(24, 39, 75, 0.07), 0 2px 7px rgba(24, 39, 75, 0.03);
+}
+
+.history-toggle {
+    display: block;
+    margin: 16px 0 0 auto;
+    padding: 9px 13px;
+    border: 1px solid #dce5f7;
+    border-radius: 10px;
+    color: #315fca;
+    background: #f3f6ff;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 160ms ease, transform 160ms ease;
+}
+
+.history-toggle:hover {
+    transform: translateY(-1px);
+    background: #eaf0ff;
+}
+
+.topics-drawer {
+    position: absolute;
+    z-index: 2;
+    inset: 0 auto 0 0;
+    width: min(390px, 92%);
+    padding: 24px;
+    overflow: auto;
+    border: 1px solid #dfe6f2;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 20px 0 50px rgba(24, 39, 75, 0.18);
+    transform: translateX(-105%);
+    transition: transform 260ms cubic-bezier(.2, .75, .25, 1);
+    visibility: hidden;
+}
+
+.topics-drawer.is-open {
+    transform: translateX(0);
+    visibility: visible;
+}
+
+.drawer-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.drawer-heading h3 {
+    margin: 6px 0 0;
+    color: #1b2942;
+    font-family: 'Manrope', 'Segoe UI', sans-serif;
+    font-size: 1.16rem;
+}
+
+.drawer-close {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid #e6ebf3;
+    border-radius: 50%;
+    color: #526078;
+    background: #f8faff;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.drawer-date {
+    margin: 9px 0 18px;
+    color: #7b879b;
+    font-size: 0.8rem;
+}
+
+.drawer-topic-list {
+    grid-template-columns: 1fr;
+}
+
+.topics-drawer[aria-hidden="true"] {
+    pointer-events: none;
 }
 
 .yesterday-panel {

@@ -44,7 +44,7 @@
                 </div>
             </div>
 
-            <section class="topics-panel" aria-labelledby="topics-heading">
+            <section class="topics-panel" id="topics-panel" aria-labelledby="topics-heading">
                 <div class="section-heading">
                     <div>
                         <p class="eyebrow">TODAY'S PROGRESS</p>
@@ -52,9 +52,23 @@
                     </div>
                     <span class="topic-count" id="topic-count">—</span>
                 </div>
+                <button class="history-toggle" id="history-toggle" type="button" aria-expanded="false" aria-controls="yesterday-topics-drawer">View yesterday</button>
                 <ul id="today-topics" class="topic-list" aria-live="polite">
                     <li class="topic-empty">Loading today's topics…</li>
                 </ul>
+                <aside class="topics-drawer" id="yesterday-topics-drawer" aria-label="Yesterday's topics" aria-hidden="true">
+                    <div class="drawer-heading">
+                        <div>
+                            <p class="eyebrow">RECENT HISTORY</p>
+                            <h3>Yesterday's topics</h3>
+                        </div>
+                        <button class="drawer-close" id="drawer-close" type="button" aria-label="Close yesterday's topics">&times;</button>
+                    </div>
+                    <p class="drawer-date" id="drawer-date"></p>
+                    <ul id="yesterday-topics-list" class="topic-list drawer-topic-list" aria-live="polite">
+                        <li class="topic-empty">Loading yesterday's topics...</li>
+                    </ul>
+                </aside>
             </section>
 
             <section id="container" class="timer-panel" aria-label="Focus timer">

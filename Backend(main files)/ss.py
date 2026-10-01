@@ -35,18 +35,27 @@ if selected_category != FOLDER_CATEGORY:
     streaks['selected_category_streak'] = get_streak(commits, selected_category)
 
 today_topics = []
+yesterday_topics = []
 today = date.today().isoformat()
+yesterday = (date.today() - timedelta(days=1)).isoformat()
 for commit in commits:
-    if commit["date"] == today:
-        today_topics.append({
+    if commit["date"] in (today, yesterday):
+        topic_entry = {
             "date": commit["date"],
             "topic": commit["topic"],
             "category": commit["category"],
-        })
+        }
+        if commit["date"] == today:
+            today_topics.append(topic_entry)
+        else:
+            yesterday_topics.append(topic_entry)
 
 with (backend_dir / "streaks.json").open("w", encoding="utf-8") as f:
     json.dump(streaks, f)
 
 with (backend_dir / "today_topics.json").open("w", encoding="utf-8") as f:
     json.dump(today_topics, f, ensure_ascii=False)
+
+with (backend_dir / "yesterday_topics.json").open("w", encoding="utf-8") as f:
+    json.dump(yesterday_topics, f, ensure_ascii=False)
     
