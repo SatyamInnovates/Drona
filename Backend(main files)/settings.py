@@ -3,7 +3,8 @@ from pathlib import Path
 
 
 backend_dir = Path(__file__).resolve().parent
-settings_file = backend_dir / "repo_settings.json"
+database_dir = backend_dir.parent / "Database"
+settings_file = database_dir / "repo_settings.json"
 FOLDER_CATEGORY = "Use folder category"
 CUSTOM_CATEGORY = "Choose my own category"
 

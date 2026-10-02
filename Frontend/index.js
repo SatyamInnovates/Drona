@@ -8,7 +8,7 @@ yesterday.setDate(yesterday.getDate() - 1);
 const localIsoDate = value => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
 
 
-fetch('../Backend(main files)/streaks.json')
+fetch('../Database/streaks.json')
     .then(response => response.json())
     .then(data => {
         ml_streak.textContent = data.ml_streak;
@@ -74,7 +74,7 @@ document.addEventListener('keydown', event => {
 
 
 // let's rewrite this code
-fetch('../Backend(main files)/data.json?day=' + todayIso, { cache: 'no-store' })
+fetch('../Database/data.json?day=' + todayIso, { cache: 'no-store' })
     .then(response => {
         if (!response.ok) throw new Error("Could not fetch today's or yesterday's topics");
         return response.json();
@@ -114,7 +114,7 @@ document.getElementById('yesterday-hours').textContent = formatTime(yesterdayMs)
 
 const yesterdayFiles = document.getElementById('yesterday-files');
 const yesterdayFileCount = document.getElementById('yesterday-file-count');
-fetch('../Backend(main files)/yesterday_files.json?day=' + localIsoDate(yesterday), { cache: 'no-store' })
+fetch('../Database/yesterday_files.json?day=' + localIsoDate(yesterday), { cache: 'no-store' })
     .then(response => {
         if (!response.ok) throw new Error('Could not load yesterday’s GitHub files');
         return response.json();

@@ -4,7 +4,8 @@ from pathlib import Path
 from settings import load_category, FOLDER_CATEGORY
 
 backend_dir = Path(__file__).resolve().parent
-with (backend_dir / "data.json").open(encoding="utf-8") as f:
+database_dir = backend_dir.parent / "Database"
+with (database_dir / "data.json").open(encoding="utf-8") as f:
     commits = json.load(f)
 
 for commit in commits:
@@ -50,12 +51,12 @@ for commit in commits:
         else:
             yesterday_topics.append(topic_entry)
 
-with (backend_dir / "streaks.json").open("w", encoding="utf-8") as f:
+with (database_dir / "streaks.json").open("w", encoding="utf-8") as f:
     json.dump(streaks, f)
 
-with (backend_dir / "today_topics.json").open("w", encoding="utf-8") as f:
+with (database_dir / "today_topics.json").open("w", encoding="utf-8") as f:
     json.dump(today_topics, f, ensure_ascii=False)
 
-with (backend_dir / "yesterday_topics.json").open("w", encoding="utf-8") as f:
+with (database_dir / "yesterday_topics.json").open("w", encoding="utf-8") as f:
     json.dump(yesterday_topics, f, ensure_ascii=False)
     

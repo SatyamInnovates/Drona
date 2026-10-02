@@ -9,6 +9,7 @@ from config import repo
 from settings import choose_category, FOLDER_CATEGORY
 
 backend_dir = Path(__file__).resolve().parent
+database_dir = backend_dir.parent / "Database"
 
 def update_streaks():
     result = run([sys.executable, str(backend_dir / "ss.py")])
@@ -75,10 +76,10 @@ for data_point in data_output.splitlines():
 
  
 
-with open(r'C:\Drona\Backend(main files)\data.json','w') as file:
+with (database_dir / 'data.json').open('w', encoding='utf-8') as file:
     json.dump(commits,file)
 
-with (backend_dir / 'yesterday_files.json').open('w', encoding='utf-8') as file:
+with (database_dir / 'yesterday_files.json').open('w', encoding='utf-8') as file:
     json.dump(yesterday_files, file, ensure_ascii=False)
 
 update_streaks()
