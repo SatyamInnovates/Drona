@@ -58,13 +58,13 @@ yesterdayTopicDate.textContent = yesterday.toLocaleDateString(undefined, {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
 });
 
-function setleHistoryOpen(){
-    historyDrawer.classList.toggle('open');
+function setleHistoryOpen(isOpen){
+    historyDrawer.classList.toggle('is-open', isOpen);
     historyDrawer.setAttribute('aria-hidden', String(!isOpen));
     historyToggle.setAttribute('aria-expanded', String(isOpen));
 }
 
-historyToggle.addEventListener('click',() => setleHistoryOpen(true));
+historyToggle.addEventListener('click', () => setleHistoryOpen(true));
 document.getElementById('drawer-close').addEventListener('click',() => setleHistoryOpen(false));
 document.addEventListener('keydown', event => {
     if(event.key === "Escape"){
@@ -76,20 +76,20 @@ document.addEventListener('keydown', event => {
 // let's rewrite this code
 fetch('../Backend(main files)/data.json?day=' + todayIso, { cache: 'no-store' })
     .then(response => {
-        if (!response.json) throw new Error("Could not fetch today's or yesterday's topics")
-            return response.json
+        if (!response.ok) throw new Error("Could not fetch today's or yesterday's topics");
+        return response.json();
     })
     .then(commits => {
-        const todayItems = commits.filter(commit => commit.date === todayIso)  
-        const yesterdayItems = commits.filter(commit => commit.date === yesterdayIso)  
-        topicCount.textContent = todayIso.length
-        renderTopicList(todayTopics,todayItems,"There aren't any topics recorded today")
-        renderTopicList(yesterdayTopics,yesterdayItems,"There aren't any topics recorded yesterday")
+        const todayItems = commits.filter(commit => commit.date === todayIso);
+        const yesterdayItems = commits.filter(commit => commit.date === yesterdayIso);
+        topicCount.textContent = todayItems.length;
+        renderTopicList(todayTopics, todayItems, "There aren't any topics recorded today.");
+        renderTopicList(yesterdayTopicsList, yesterdayItems, "There aren't any topics recorded yesterday.");
     })
-    .fetch(() => {
-        topicCount.textContent = "--"
+    .catch(() => {
+        topicCount.textContent = '—';
         renderTopicList(todayTopics,[],'Today topics are not available');
-        renderTopicList(yesterdayTopics,[],'Today topics are not available');
+        renderTopicList(yesterdayTopicsList,[],'Today topics are not available');
     }
 )
 // Reload at local midnight so the date labels and day-specific data roll over.
@@ -208,4 +208,3 @@ function showTotal(){
 }
 
 showTotal();   
-
