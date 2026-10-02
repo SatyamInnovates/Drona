@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 
 
@@ -22,6 +23,9 @@ def load_category():
 def choose_category():
     current = load_category()
     choices = ["Machine learning", "DSA", FOLDER_CATEGORY, CUSTOM_CATEGORY]
+    if not sys.stdin.isatty():
+        return current
+
     print("Choose the category for this repository:")
     for number, choice in enumerate(choices, start=1):
         if choice == current:
@@ -47,7 +51,10 @@ def choose_category():
             break
         print("Choose one of the listed numbers.")
 
-    settings_file.write_text(
-        json.dumps({"category": selected}, indent=2), encoding="utf-8"
-    )
+    try:
+        settings = json.loads(settings_file.read_text(encoding="utf-8")) if settings_file.exists() else {}
+    except (OSError, json.JSONDecodeError):
+        settings = {}
+    settings["category"] = selected
+    settings_file.write_text(json.dumps(settings, indent=2), encoding="utf-8")
     return selected

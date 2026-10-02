@@ -22,17 +22,32 @@ def run(cmd):
 
 
 selected_category = choose_category()
-status = run(["git", "status", "--porcelain", "--untracked-files=all"])
+status = run(["git", "status", "--porcelain", "-z", "--untracked-files=all"])
 if status.returncode != 0:
     print(status.stderr)
     exit(status.returncode)
 
-if status.stdout == "":
+status_entries = status.stdout.split("\0")
+changed_paths = []
+index = 0
+while index < len(status_entries):
+    entry = status_entries[index]
+    index += 1
+    if not entry:
+        continue
+    change_code, path = entry[:2], entry[3:]
+    changed_paths.append(path)
+    # With -z, Git emits the second path of a rename or copy as a separate record.
+    if "R" in change_code or "C" in change_code:
+        if index < len(status_entries) and status_entries[index]:
+            changed_paths.append(status_entries[index])
+            index += 1
+
+if not changed_paths:
     print("No changes to commit.")
 else:
-    lines = status.stdout.splitlines()
-    print(lines)
-    content_lines = [line for line in lines if line[3:].replace('\\','/').split('/')[0].strip('"')]
+    print(changed_paths)
+    content_lines = changed_paths
     if content_lines:
         topics = [topic_finding(line[3:]) for line in content_lines]
         categories = [
@@ -44,7 +59,7 @@ else:
         message = ' '.join(messages)
         print(messages)
 
-        for cmd in (["git", "add", "."],
+        for cmd in (["git", "add", "-A", "--", *changed_paths],
                     ["git", "commit", "-m", message],
                     ["git", "push", "origin", "main"]):
             result = run(cmd)
@@ -83,6 +98,6 @@ with (database_dir / 'yesterday_files.json').open('w', encoding='utf-8') as file
     json.dump(yesterday_files, file, ensure_ascii=False)
 
 update_streaks()
-if status.stdout:
+if changed_paths:
     print("Pushed to github successfully")
 

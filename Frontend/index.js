@@ -21,6 +21,10 @@ fetch('../Database/streaks.json')
             selectedCategoryCard.hidden = false;
         }
     })
+    .catch(() => {
+        ml_streak.textContent = '0';
+        dsa_streak.textContent = '0';
+    });
 
 const todayTopics = document.getElementById('today-topics');
 const topicCount = document.getElementById('topic-count');
@@ -157,15 +161,19 @@ let elapsetTime = 0;
 let isRunning = false;
 let segmentStart = 0;
 
-const storageKey = "sessions-" + new Date().toDateString();   // NEW: one box per day
-let sessions = JSON.parse(localStorage.getItem(storageKey)) || [];   // NEW: load (null -> [])
+const storageKey = "sessions-" + new Date().toDateString();
+let sessions = [];
+try {
+    const savedSessions = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (Array.isArray(savedSessions)) sessions = savedSessions.map(Number).filter(Number.isFinite);
+} catch {
+    sessions = [];
+}
 
 function formatTime(ms){
     let hours = Math.floor(ms / (1000 * 60 * 60)).toString().padStart(2,"0");
     let minutes = Math.floor(ms / (1000 * 60) % 60).toString().padStart(2,"0");
     let seconds = Math.floor(ms / 1000 % 60).toString().padStart(2,"0");
-    let milliseconds = Math.floor(ms % 1000 / 10).toString().padStart(2,"0");
-    
     return `${hours}:${minutes}:${seconds}`;
 }
 
@@ -194,7 +202,11 @@ function reset(){
     startTime = 0;
     elapsetTime = 0;
     isRunning = false;
-    display.textContent = "00:00:00:00";
+    segmentStart = 0;
+    sessions = [];
+    localStorage.removeItem(storageKey);
+    display.textContent = "00:00:00";
+    showTotal();
 }
 
 function update(){
