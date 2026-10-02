@@ -49,10 +49,10 @@ else:
     print(changed_paths)
     content_lines = changed_paths
     if content_lines:
-        topics = [topic_finding(line[3:]) for line in content_lines]
+        topics = [topic_finding(path) for path in content_lines]
         categories = [
-            category_finding(line[3:], repo) if selected_category == FOLDER_CATEGORY else selected_category
-            for line in content_lines
+            category_finding(path, repo) if selected_category == FOLDER_CATEGORY else selected_category
+            for path in content_lines
         ]
         print("Topics found:", topics)
         messages = [f"save:[{category}] {topic}" for topic, category in zip(topics, categories)]
