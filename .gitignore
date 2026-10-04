@@ -4,3 +4,4 @@ __pycache__/
 Database/data.json
 Database/streaks.json
 Database/focus_sessions.json
+.env

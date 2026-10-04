@@ -4,6 +4,8 @@ const selectedCategoryCard = document.getElementById('selected-category-card');
 const selectedCategoryLabel = document.getElementById('selected-category-label');
 const selectedCategoryValue = document.getElementById('selected-category-value');
 const yesterday = new Date();
+
+
 yesterday.setDate(yesterday.getDate() - 1);
 const localIsoDate = value => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
 
@@ -28,6 +30,39 @@ fetch('../Database/streaks.json')
 
 const todayTopics = document.getElementById('today-topics');
 const topicCount = document.getElementById('topic-count');
+const recapButton = document.getElementById('generate-recap');
+const recapOutput = document.getElementById('recap-output');
+let todayItems = [];
+
+async function generateRecap(topics, focusTime) {
+    const response = await fetch('/api/recap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topics, focusTime, day: todayIso })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Could not generate recap.');
+    return data.recap;
+}
+
+recapButton.addEventListener('click', async () => {
+    console.log('Generate recap button clicked');
+    recapButton.disabled = true;
+    recapOutput.textContent = 'Generating your recap…';
+    recapOutput.classList.remove('recap-error');
+    try {
+        const recap = await generateRecap(todayItems, totalDisplay.textContent);
+        recapOutput.textContent = recap;
+    } catch (error) {
+        console.error('Recap request failed:', error);
+        recapOutput.textContent = error.message || 'Could not generate your recap. Please try again.';
+        recapOutput.classList.add('recap-error');
+    } finally {
+        recapButton.disabled = false;
+    }
+    console.log(recapOutput.textContent);
+});
+
 
 function renderTopicList(list, topics, emptyMessage) {
     list.replaceChildren();
@@ -84,7 +119,7 @@ fetch('../Database/data.json?day=' + todayIso, { cache: 'no-store' })
         return response.json();
     })
     .then(commits => {
-        const todayItems = commits.filter(commit => commit.date === todayIso);
+        todayItems = commits.filter(commit => commit.date === todayIso);
         const yesterdayItems = commits.filter(commit => commit.date === yesterdayIso);
         topicCount.textContent = todayItems.length;
         renderTopicList(todayTopics, todayItems, "There aren't any topics recorded today.");
@@ -288,3 +323,5 @@ function showTotal(){
 
 showTotal();
 syncSessions();
+
+

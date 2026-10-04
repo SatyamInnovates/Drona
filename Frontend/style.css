@@ -333,6 +333,22 @@ button:focus-visible {
     text-align: center;
 }
 
+.recap-card {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid #e6eaff;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #f7f8ff, #fff);
+}
+
+.recap-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.recap-heading-row h3 { margin: 5px 0 0; color: var(--ink); font: 800 1rem 'Manrope', 'Segoe UI', sans-serif; }
+.recap-button { min-height: 38px; padding: 0 14px; border: 0; border-radius: 10px; color: #fff; background: var(--blue); font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+.recap-button:hover { background: #435ed6; }
+.recap-button:disabled { cursor: wait; opacity: 0.65; }
+.recap-output { margin: 14px 0 0; color: #536078; font-size: 0.88rem; line-height: 1.65; white-space: pre-wrap; }
+.recap-output.recap-error { color: #a43e4b; }
+
 .history-toggle { display: block; margin: 15px 0 0 auto; color: #4f67d0; background: #f6f7ff; }
 
 .topics-drawer {
