@@ -18,6 +18,8 @@ def update_streaks():
         exit(result.returncode)
 
 def run(cmd):
+    if cmd[0] == "git":
+        cmd = ["git", "-c", f"safe.directory={repo}", *cmd[1:]]
     return subprocess.run(cmd, capture_output=True, text=True, cwd=str(repo))
 
 
