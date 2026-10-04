@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 Database/data.json
 Database/streaks.json
+Database/focus_sessions.json

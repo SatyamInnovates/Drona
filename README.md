@@ -12,3 +12,17 @@ falls back to this project folder. Non-interactive runs keep the saved category.
 Run the tracker once to generate the dashboard data files. Serve the project
 folder over HTTP when opening the dashboard so the browser can fetch those
 files; opening `Frontend/index.html` directly may block those requests.
+
+## Run the dashboard with persistent timer storage
+
+Start the included dashboard server from the project root:
+
+```sh
+python "Backend(main files)/server.py"
+```
+
+Then open `http://localhost:8000/Frontend/`. The server saves timer sessions
+in `Database/focus_sessions.json`, so they survive browser restarts and server
+restarts as long as that database file remains on persistent storage. A basic
+static file server does not provide this API; the timer falls back to browser
+storage when one is used.

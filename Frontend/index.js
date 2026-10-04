@@ -160,14 +160,30 @@ let startTime = 0;
 let elapsetTime = 0;
 let isRunning = false;
 let segmentStart = 0;
+let serverSessionsLoaded = false;
 
 const storageKey = "sessions-" + new Date().toDateString();
+const activeSessionKey = storageKey + "-active";
 let sessions = [];
 try {
     const savedSessions = JSON.parse(localStorage.getItem(storageKey) || '[]');
     if (Array.isArray(savedSessions)) sessions = savedSessions.map(Number).filter(Number.isFinite);
 } catch {
     sessions = [];
+}
+let recoveredActiveMs = 0;
+
+// Keep the start time separately so a browser closed during a running session
+// can recover that time the next time the dashboard opens.
+try {
+    const savedStart = Number(localStorage.getItem(activeSessionKey));
+    if (Number.isFinite(savedStart) && savedStart > 0) {
+        recoveredActiveMs = Math.max(0, Date.now() - savedStart);
+        localStorage.removeItem(activeSessionKey);
+        localStorage.setItem(storageKey, JSON.stringify(sessions));
+    }
+} catch {
+    // The timer remains usable when browser storage is unavailable.
 }
 
 function formatTime(ms){
@@ -181,9 +197,50 @@ function start(){
     if(!isRunning){
         startTime = Date.now() - elapsetTime;
         segmentStart = Date.now();
+        try { localStorage.setItem(activeSessionKey, String(segmentStart)); } catch {}
         timer = setInterval(update,10);
         isRunning = true;
     }
+}
+
+async function syncSessions() {
+    try {
+        const localSessions = sessions;
+        const response = await fetch('/api/focus-sessions?day=' + encodeURIComponent(localIsoDate(new Date())), { cache: 'no-store' });
+        if (!response.ok) throw new Error('Server storage is unavailable');
+        const data = await response.json();
+        if (!Array.isArray(data.sessions)) throw new Error('Invalid server session data');
+        const serverSavedSessions = data.sessions.map(Number).filter(value => Number.isFinite(value) && value >= 0);
+        sessions = serverSavedSessions.length ? serverSavedSessions : localSessions;
+        serverSessionsLoaded = true;
+        if (recoveredActiveMs > 0) {
+            sessions.push(recoveredActiveMs);
+            recoveredActiveMs = 0;
+            await saveSessionsToServer();
+        } else {
+            localStorage.setItem(storageKey, JSON.stringify(sessions));
+            if (!serverSavedSessions.length && sessions.length) await saveSessionsToServer();
+        }
+        showTotal();
+    } catch {
+        if (recoveredActiveMs > 0) {
+            sessions.push(recoveredActiveMs);
+            recoveredActiveMs = 0;
+            try { localStorage.setItem(storageKey, JSON.stringify(sessions)); } catch {}
+        }
+        showTotal();
+    }
+}
+
+async function saveSessionsToServer() {
+    if (!serverSessionsLoaded) return;
+    try {
+        await fetch('/api/focus-sessions', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ day: localIsoDate(new Date()), sessions })
+        });
+    } catch {}
 }
 
 function stop(){
@@ -191,9 +248,13 @@ function stop(){
         clearInterval(timer);
         elapsetTime = Date.now() - startTime;
         sessions.push(Date.now() - segmentStart);
-        localStorage.setItem(storageKey, JSON.stringify(sessions));   // NEW: save
-        showTotal();
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(sessions));
+            localStorage.removeItem(activeSessionKey);
+        } catch {}
         isRunning = false;
+        saveSessionsToServer();
+        showTotal();
     }
 }
 
@@ -204,7 +265,11 @@ function reset(){
     isRunning = false;
     segmentStart = 0;
     sessions = [];
-    localStorage.removeItem(storageKey);
+    try {
+        localStorage.removeItem(storageKey);
+        localStorage.removeItem(activeSessionKey);
+    } catch {}
+    saveSessionsToServer();
     display.textContent = "00:00:00";
     showTotal();
 }
@@ -212,11 +277,14 @@ function reset(){
 function update(){
     elapsetTime = Date.now() - startTime;
     display.textContent = formatTime(elapsetTime);
+    showTotal();
 }
 
 function showTotal(){
-    const total = sessions.reduce((sum, ms) => sum + ms, 0);
+    const completed = sessions.reduce((sum, ms) => sum + ms, 0);
+    const total = completed + (isRunning ? Date.now() - segmentStart : 0);
     totalDisplay.textContent = formatTime(total);
 }
 
-showTotal();   
+showTotal();
+syncSessions();
