@@ -34,6 +34,45 @@ const recapButton = document.getElementById('generate-recap');
 const recapOutput = document.getElementById('recap-output');
 let todayItems = [];
 
+const githubPushButton = document.getElementById('github-push');
+const githubPushStatus = document.getElementById('github-push-status');
+const githubPushCategory = document.getElementById('github-push-category');
+const githubPushCustomCategory = document.getElementById('github-push-custom-category');
+githubPushCategory.addEventListener('change', () => {
+    const wantsCustom = githubPushCategory.value === 'custom';
+    githubPushCustomCategory.hidden = !wantsCustom;
+    if (wantsCustom) githubPushCustomCategory.focus();
+});
+githubPushButton.addEventListener('click', async () => {
+    const category = githubPushCategory.value === 'custom'
+        ? githubPushCustomCategory.value.trim()
+        : githubPushCategory.value;
+    if (!category) {
+        githubPushStatus.textContent = 'Enter a category before pushing.';
+        githubPushStatus.classList.add('recap-error');
+        githubPushCustomCategory.focus();
+        return;
+    }
+    githubPushButton.disabled = true;
+    githubPushStatus.classList.remove('recap-error');
+    githubPushStatus.textContent = 'Running the tracker and pushing changes…';
+    try {
+        const response = await fetch('/api/github-push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not push to GitHub.');
+        githubPushStatus.textContent = data.message;
+    } catch (error) {
+        githubPushStatus.textContent = error.message || 'Could not push to GitHub. Please try again.';
+        githubPushStatus.classList.add('recap-error');
+    } finally {
+        githubPushButton.disabled = false;
+    }
+});
+
 async function generateRecap(topics, focusTime) {
     const response = await fetch('/api/recap', {
         method: 'POST',

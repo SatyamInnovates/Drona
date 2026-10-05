@@ -1,4 +1,5 @@
 import subprocess
+import argparse
 from topic import topic_finding,category_finding
 import json
 import re
@@ -23,7 +24,10 @@ def run(cmd):
     return subprocess.run(cmd, capture_output=True, text=True, cwd=str(repo))
 
 
-selected_category = choose_category()
+parser = argparse.ArgumentParser()
+parser.add_argument("--category", help="Use and save this category without prompting")
+args = parser.parse_args()
+selected_category = choose_category(args.category)
 status = run(["git", "status", "--porcelain", "-z", "--untracked-files=all"])
 if status.returncode != 0:
     print(status.stderr)
@@ -57,8 +61,8 @@ else:
             for path in content_lines
         ]
         print("Topics found:", topics)
-        messages = [f"save:[{category}] {topic}" for topic, category in zip(topics, categories)]
-        message = ' '.join(messages)
+        messages = [f"{topic} [{category}]" for topic, category in zip(topics, categories)]
+        message = '; '.join(messages)
         print(messages)
 
         for cmd in (["git", "add", "-A", "--", *changed_paths],
@@ -82,14 +86,30 @@ yesterday_files = sorted({line.strip().replace('\\', '/') for line in file_outpu
 
 commits = []
 for data_point in data_output.splitlines():
-    date, data_topic = data_point.split('|')
-    matches = re.findall(r'\[([^\]]+)\]', data_topic)
-    if not matches:
-        continue
-    clean_topic = re.sub(r'\[[^\]]+\]', '', data_topic)
-    clean_topic = re.sub(r'^\s*save\s*:?\s*', '', clean_topic).strip()
-    for category in matches:
-        commits.append({"date": date, "topic": clean_topic, "category": category})
+    date, data_topic = data_point.split('|', 1)
+    # New subjects look like `topic [category]; topic [category]`. Keep
+    # reading the older `save:[category] topic` format from existing history.
+    if re.search(r'(?:^|\s)save:', data_topic, flags=re.IGNORECASE):
+        records = [
+            (category.strip(), topic.strip())
+            for category, topic in re.findall(
+                r'(?:^|\s)save:\s*\[([^\]]+)\]\s*(.+?)'
+                r'(?=\s+save:|$)',
+                data_topic,
+                flags=re.IGNORECASE,
+            )
+        ]
+    else:
+        records = []
+        for record in data_topic.split(';'):
+            match = re.fullmatch(r'\s*(.*?)\s+\[([^\]]+)\]\s*', record)
+            if match:
+                topic, category = match.groups()
+                records.append((category.strip(), topic.strip()))
+
+    for category, topic in records:
+        if topic and category:
+            commits.append({"date": date, "topic": topic, "category": category})
 
  
 

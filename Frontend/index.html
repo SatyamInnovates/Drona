@@ -52,6 +52,24 @@
                     </div>
                     <span class="topic-count" id="topic-count">—</span>
                 </div>
+                <section class="github-push-card" aria-labelledby="github-push-heading">
+                    <div>
+                        <p class="eyebrow">MANUAL SYNC</p>
+                        <h3 id="github-push-heading">Push changes to GitHub</h3>
+                        <p id="github-push-status" class="github-push-status" aria-live="polite">Run the tracker and push your changes when you're ready.</p>
+                    </div>
+                    <div class="github-push-controls">
+                        <label class="github-push-category-label" for="github-push-category">Category</label>
+                        <select id="github-push-category" class="github-push-category">
+                            <option value="Use folder category">Use folder category</option>
+                            <option value="Machine learning">Machine learning</option>
+                            <option value="DSA">DSA</option>
+                            <option value="custom">Custom…</option>
+                        </select>
+                        <input id="github-push-custom-category" class="github-push-category" type="text" maxlength="100" placeholder="Enter a category" aria-label="Custom category" hidden>
+                        <button id="github-push" class="recap-button" type="button">Push to GitHub</button>
+                    </div>
+                </section>
                 <button class="history-toggle" id="history-toggle" type="button" aria-expanded="false" aria-controls="yesterday-topics-drawer">View yesterday</button>
                 <ul id="today-topics" class="topic-list" aria-live="polite">
                     <li class="topic-empty">Loading today's topics…</li>

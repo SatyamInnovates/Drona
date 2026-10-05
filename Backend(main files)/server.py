@@ -1,6 +1,9 @@
 import json
 import os
 import re
+import subprocess
+import sys
+import threading
 import urllib.error
 import urllib.request
 from datetime import date
@@ -15,6 +18,8 @@ SESSIONS_FILE = DATABASE_DIR / "focus_sessions.json"
 DAY_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "openai/gpt-oss-20b"
+PUSH_LOCK = threading.Lock()
+MAIN_SCRIPT = Path(__file__).resolve().with_name("main.py")
 
 
 def load_local_env():
@@ -70,7 +75,7 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         except ValueError:
             return self._write_json(400, {"error": "Invalid day."})
         sessions = self._read_sessions().get(day, [])
-        return self._write_json(200, {"sesseeegions": sessions if isinstance(sessions, list) else []})
+        return self._write_json(200, {"sessions": sessions if isinstance(sessions, list) else []})
 
     def do_PUT(self):
         if urlparse(self.path).path != "/api/focus-sessions":
@@ -97,7 +102,10 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         return self._write_json(200, {"saved": True})
 
     def do_POST(self):
-        if urlparse(self.path).path != "/api/recap":
+        path = urlparse(self.path).path
+        if path == "/api/github-push":
+            return self._run_github_push()
+        if path != "/api/recap":
             return self._write_json(404, {"error": "Not found."})
 
         try:
@@ -170,6 +178,57 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             self.log_error("Could not generate recap: %s", error)
             return self._write_json(502, {"error": "Could not generate a recap right now. Please try again."})
         return self._write_json(200, {"recap": recap})
+
+    def _run_github_push(self):
+        # This action can commit and push repository files. Accept it only from
+        # the same loopback origin as this local dashboard.
+        origin = urlparse(self.headers.get("Origin", ""))
+        request_host = self.headers.get("Host", "")
+        if origin.netloc != request_host or origin.hostname not in {"localhost", "127.0.0.1", "::1"}:
+            return self._write_json(403, {"error": "GitHub push requests must come from this local dashboard."})
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if length <= 0 or length > 2000:
+                raise ValueError
+            payload = json.loads(self.rfile.read(length))
+            category = payload.get("category")
+            if not isinstance(category, str) or not category.strip() or len(category) > 100:
+                raise ValueError
+            category = category.strip()
+        except (ValueError, TypeError, AttributeError, json.JSONDecodeError):
+            return self._write_json(400, {"error": "Choose a category before pushing."})
+        if not PUSH_LOCK.acquire(blocking=False):
+            return self._write_json(409, {"error": "A GitHub push is already running."})
+        try:
+            try:
+                result = subprocess.run(
+                    [sys.executable, str(MAIN_SCRIPT), "--category", category],
+                    cwd=str(PROJECT_DIR),
+                    stdin=subprocess.DEVNULL,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=300,
+                    check=False,
+                )
+            except subprocess.TimeoutExpired:
+                return self._write_json(504, {"error": "The GitHub push timed out after five minutes."})
+            except OSError as error:
+                self.log_error("Could not start GitHub push script: %s", error)
+                return self._write_json(500, {"error": "Could not start the push script."})
+
+            output = (result.stdout or "").strip()
+            if result.returncode != 0:
+                details = (result.stderr or output or "The script exited without an error message.").strip()
+                self.log_error("GitHub push script failed (%s): %s", result.returncode, details[:2000])
+                return self._write_json(500, {"error": details[-1200:]})
+            return self._write_json(200, {
+                "success": True,
+                "message": output or "Tracker finished successfully.",
+            })
+        finally:
+            PUSH_LOCK.release()
 
 
 if __name__ == "__main__":

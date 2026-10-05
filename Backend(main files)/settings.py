@@ -20,9 +20,24 @@ def load_category():
         return FOLDER_CATEGORY
 
 
-def choose_category():
+def choose_category(category_override=None):
     current = load_category()
     choices = ["Machine learning", "DSA", FOLDER_CATEGORY, CUSTOM_CATEGORY]
+    if category_override is not None:
+        selected = category_override.strip()
+        if not selected:
+            raise ValueError("Category cannot be empty.")
+        if selected == CUSTOM_CATEGORY:
+            raise ValueError("Enter a category name instead of choosing the custom category label.")
+        try:
+            settings = json.loads(settings_file.read_text(encoding="utf-8")) if settings_file.exists() else {}
+        except (OSError, json.JSONDecodeError):
+            settings = {}
+        settings["category"] = selected
+        settings_file.parent.mkdir(parents=True, exist_ok=True)
+        settings_file.write_text(json.dumps(settings, indent=2), encoding="utf-8")
+        return selected
+
     if not sys.stdin.isatty():
         return current
 

@@ -26,3 +26,8 @@ in `Database/focus_sessions.json`, so they survive browser restarts and server
 restarts as long as that database file remains on persistent storage. A basic
 static file server does not provide this API; the timer falls back to browser
 storage when one is used.
+
+Use **Push to GitHub** in the dashboard to run `Backend(main files)/main.py`
+manually. Choose a category in the dashboard; it is saved, then used to label
+the commit before the script pushes to `origin/main`. Configure the tracked
+repository and GitHub credentials before using it.
