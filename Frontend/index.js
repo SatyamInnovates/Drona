@@ -10,22 +10,44 @@ yesterday.setDate(yesterday.getDate() - 1);
 const localIsoDate = value => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
 
 
-fetch('../Database/streaks.json')
-    .then(response => response.json())
-    .then(data => {
-        ml_streak.textContent = data.ml_streak;
-        dsa_streak.textContent = data.dsa_streak;
-        const selectedCategory = data.selected_category;
+function calculateStreak(commits, category) {
+    const dates = new Set(commits
+        .filter(commit => commit.category?.trim().toLowerCase() === category.trim().toLowerCase())
+        .map(commit => commit.date));
+    const current = new Date();
+    let day = dates.has(localIsoDate(current)) ? current : new Date(current.getFullYear(), current.getMonth(), current.getDate() - 1);
+    let streak = 0;
+    while (dates.has(localIsoDate(day))) {
+        streak += 1;
+        day.setDate(day.getDate() - 1);
+    }
+    return streak;
+}
+
+Promise.all([
+    fetch('../Database/data.json?day=' + localIsoDate(new Date()), { cache: 'no-store' }).then(response => {
+        if (!response.ok) throw new Error('Could not load activity data');
+        return response.json();
+    }),
+    fetch('../Database/streaks.json?day=' + localIsoDate(new Date()), { cache: 'no-store' }).then(response => {
+        if (!response.ok) throw new Error('Could not load streak settings');
+        return response.json();
+    }).catch(() => ({}))
+])
+    .then(([commits, settings]) => {
+        ml_streak.textContent = calculateStreak(commits, 'Machine learning');
+        dsa_streak.textContent = calculateStreak(commits, 'DSA');
+        const selectedCategory = settings.selected_category;
         const builtInCategories = ['dsa', 'machine learning'];
         if (selectedCategory && !builtInCategories.includes(selectedCategory.trim().toLowerCase())) {
             selectedCategoryLabel.textContent = selectedCategory;
-            selectedCategoryValue.textContent = data.selected_category_streak;
+            selectedCategoryValue.textContent = calculateStreak(commits, selectedCategory);
             selectedCategoryCard.hidden = false;
         }
     })
     .catch(() => {
-        ml_streak.textContent = '0';
-        dsa_streak.textContent = '0';
+        ml_streak.textContent = '—';
+        dsa_streak.textContent = '—';
     });
 
 const todayTopics = document.getElementById('today-topics');

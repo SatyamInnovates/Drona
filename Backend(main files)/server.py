@@ -1,3 +1,4 @@
+# a local server set up for the Drona learning dashboard, serving static files and handling API requests.
 import json
 import os
 import re
@@ -12,6 +13,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 
+
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATABASE_DIR = PROJECT_DIR / "Database"
 SESSIONS_FILE = DATABASE_DIR / "focus_sessions.json"
@@ -23,7 +25,6 @@ MAIN_SCRIPT = Path(__file__).resolve().with_name("main.py")
 
 
 def load_local_env():
-    """Load simple KEY=value entries from the project .env without dependencies."""
     env_file = PROJECT_DIR / ".env"
     try:
         lines = env_file.read_text(encoding="utf-8").splitlines()
@@ -180,8 +181,6 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         return self._write_json(200, {"recap": recap})
 
     def _run_github_push(self):
-        # This action can commit and push repository files. Accept it only from
-        # the same loopback origin as this local dashboard.
         origin = urlparse(self.headers.get("Origin", ""))
         request_host = self.headers.get("Host", "")
         if origin.netloc != request_host or origin.hostname not in {"localhost", "127.0.0.1", "::1"}:
