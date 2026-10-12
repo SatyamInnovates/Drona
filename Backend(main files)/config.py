@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -17,9 +18,17 @@ def _read_settings():
 
 def _valid_repo_path(value):
     path = Path(value).expanduser().resolve()
-    if not path.is_dir() or not (path/".git").exists():
+    if not path.is_dir():
         return None
-    return path
+    result = subprocess.run(
+        ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    return Path(result.stdout.strip()).resolve()
     
     
 def configured_repo():
@@ -46,6 +55,8 @@ def configured_repo():
 
     while True:
         entered_path = input("Enter the full path to the Git repository to track: ").strip()
+        if len(entered_path) >= 2 and entered_path[0] == entered_path[-1] and entered_path[0] in {"\"", "'"}:
+            entered_path = entered_path[1:-1].strip()
         if not entered_path:
             print("Path cannot be empty.")
             continue
