@@ -6,12 +6,13 @@ import re
 import sys
 from pathlib import Path
 from datetime import date, timedelta
-from config import repo
+from config import configured_repo
 from settings import choose_category, FOLDER_CATEGORY
 
 backend_dir = Path(__file__).resolve().parent
 database_dir = backend_dir.parent / "Database"
 
+print("heelo just chekcing the code")
 def update_streaks():
     result = run([sys.executable, str(backend_dir / "ss.py")])
     if result.returncode != 0:
@@ -24,10 +25,23 @@ def run(cmd):
     return subprocess.run(cmd, capture_output=True, text=True, cwd=str(repo))
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--category", help="Use and save this category without prompting")
-args = parser.parse_args()
-selected_category = choose_category(args.category)
+# args is a object
+try:
+    parser = argparse.ArgumentParser()
+    # print(parser)
+    parser.add_argument("--repo", help="Change and save the repository path")
+    parser.add_argument("--category", help="Use and save this category")
+    args = parser.parse_args()
+    # print(args)
+    repo = configured_repo(args.repo)
+    # print(repo)
+
+    selected_category = choose_category(args.category)
+except:
+    print("Some error occured while fetching the path.(try again later)")
+
+# args = parser.parse_args()
+
 status = run(["git", "status", "--porcelain", "-z", "--untracked-files=all"])
 if status.returncode != 0:
     print(status.stderr)
@@ -43,7 +57,6 @@ while index < len(status_entries):
         continue
     change_code, path = entry[:2], entry[3:]
     changed_paths.append(path)
-    # With -z, Git emits the second path of a rename or copy as a separate record.
     if "R" in change_code or "C" in change_code:
         if index < len(status_entries) and status_entries[index]:
             changed_paths.append(status_entries[index])
@@ -87,8 +100,6 @@ yesterday_files = sorted({line.strip().replace('\\', '/') for line in file_outpu
 commits = []
 for data_point in data_output.splitlines():
     date, data_topic = data_point.split('|', 1)
-    # New subjects look like `topic [category]; topic [category]`. Keep
-    # reading the older `save:[category] topic` format from existing history.
     if re.search(r'(?:^|\s)save:', data_topic, flags=re.IGNORECASE):
         records = [
             (category.strip(), topic.strip())

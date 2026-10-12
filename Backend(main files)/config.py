@@ -16,6 +16,7 @@ def _read_settings():
         return {}
     return settings if isinstance(settings,dict) else {}
 
+# path checker
 def _valid_repo_path(value):
     path = Path(value).expanduser().resolve()
     if not path.is_dir():
@@ -29,9 +30,20 @@ def _valid_repo_path(value):
     if result.returncode != 0:
         return None
     return Path(result.stdout.strip()).resolve()
-    
-    
-def configured_repo():
+
+ 
+def configured_repo(repo_override=None):
+    if repo_override is not None:
+        repo_override = repo_override.strip().strip("\"'")
+        path = _valid_repo_path(repo_override)
+        if path is None:
+            raise ValueError(f"Not a git repo : {repo_override} or some other error")
+        
+        settings = _read_settings()
+        settings['repo_path'] = str(path)
+        settings_file.parent.mkdir(parents=True, exist_ok=True)
+        settings_file.write_text(json.dumps(settings, indent=2), encoding="utf-8")
+        return path
     env_path = os.environ.get("DRONA_REPO_PATH")
     if env_path:
         path = _valid_repo_path(env_path)
@@ -71,4 +83,3 @@ def configured_repo():
         return path
 
 
-repo = configured_repo()
