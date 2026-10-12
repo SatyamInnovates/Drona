@@ -37,8 +37,9 @@ try:
     # print(repo)
 
     selected_category = choose_category(args.category)
-except:
-    print("Some error occured while fetching the path.(try again later)")
+except(ValueError) as error:
+    print(f"Some error occured while fetching the path.(try again later) : {error}")
+    raise SystemExit(1)
 
 # args = parser.parse_args()
 
