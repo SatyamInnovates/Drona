@@ -89,7 +89,6 @@ else:
 
 data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
 
-# Files included in commits made yesterday (the same commits sent to origin).
 yesterday = date.today() - timedelta(days=1)
 today = yesterday + timedelta(days=1)
 file_output = run([
