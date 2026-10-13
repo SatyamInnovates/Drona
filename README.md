@@ -18,7 +18,7 @@ files; opening `Frontend/index.html` directly may block those requests.
 Start the included dashboard server from the project root:
 
 ```sh
-python "Backend(main files)/server.py"
+python -m uvicorn server2:app --app-dir "Backend(main files)" --host 127.0.0.1 --port 8000
 ```
 
 Then open `http://localhost:8000/Frontend/`. The server saves timer sessions
