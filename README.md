@@ -31,8 +31,10 @@ Install Git and set up GitHub authentication. Point Drona at your repository onc
 python "Backend(main files)/main.py" --repo "C:\path\to\your\repository"
 ```
 
-The dashboard's **Push To Github** action commits changes in that repository and pushes them to `origin/main`. Review changes before pushing.
+The dashboard's **Push To Github** action commits changes in that repository and auto pushes them to `origin/main`. Review changes before pushing.
 
+##API key
+in the .env give your groq api key => GROQ_API_KEY="your_api_key"
 ## Local files
 
 - Dashboard: `Frontend/`
