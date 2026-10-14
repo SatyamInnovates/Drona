@@ -17,10 +17,12 @@ import sys
 PROJECT_DIR = Path(__file__).resolve().parent.parent   
 DATABASE_DIR = PROJECT_DIR / "Database"
 SESSIONS_FILE = DATABASE_DIR / "focus_sessions.json"
+CODING_ACTIVITY_FILE = DATABASE_DIR / "coding_activity.json"
 DAY_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "openai/gpt-oss-20b"
 PUSH_LOCK = threading.Lock()
+CODING_ACTIVITY_LOCK = threading.Lock()
 MAIN_SCRIPT = Path(__file__).resolve().with_name("main.py")
 
 
@@ -41,7 +43,8 @@ def load_local_env():
         if name and name not in os.environ:
             os.environ[name] = value
           
-            
+          
+        
 load_local_env()
 app = FastAPI()
 # app.mount(
@@ -55,6 +58,23 @@ def read_sessions():
         return data if isinstance(data,dict) else {}
     except (OSError,json.JSONDecodeError):
         return {}
+
+
+def read_coding_activity():
+    try:
+        data = json.loads(CODING_ACTIVITY_FILE.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def validate_activity_day(day: str):
+    if not DAY_PATTERN.fullmatch(day):
+        raise HTTPException(status_code=400, detail="A day in YYYY-MM-DD format is required.")
+    try:
+        date.fromisoformat(day)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid day.")
 
 
 @app.get("/api/focus-sessions")
@@ -90,6 +110,63 @@ def save_sessions(body:SessionIn):
     DATABASE_DIR.mkdir(parents=True,exist_ok=True)
     SESSIONS_FILE.write_text(json.dumps(data,indent=2),encoding="utf-8")
     return {"saved": True}    
+
+
+class CodingActivityIn(BaseModel):
+    event_id: str
+    day: str
+    project: str
+    language: str
+    duration_ms: StrictInt
+
+
+@app.get("/api/coding-activity")
+def get_coding_activity(day: str = ""):
+    validate_activity_day(day)
+    events = read_coding_activity().get(day, [])
+    if not isinstance(events, list):
+        events = []
+    totals = {}
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        key = (event.get("project", "Unknown"), event.get("language", "unknown"))
+        totals[key] = totals.get(key, 0) + event.get("duration_ms", 0)
+    return {
+        "total_ms": sum(totals.values()),
+        "projects": [
+            {"project": project, "language": language, "duration_ms": duration_ms}
+            for (project, language), duration_ms in totals.items()
+        ],
+    }
+
+
+@app.post("/api/coding-activity")
+def save_coding_activity(body: CodingActivityIn):
+    validate_activity_day(body.day)
+    if (not body.event_id or len(body.event_id) > 80 or
+            not body.project.strip() or len(body.project) > 120 or
+            not body.language.strip() or len(body.language) > 50 or
+            body.duration_ms <= 0 or body.duration_ms > 86_400_000):
+        raise HTTPException(status_code=400, detail="Invalid coding activity event.")
+
+    with CODING_ACTIVITY_LOCK:
+        data = read_coding_activity()
+        events = data.get(body.day, [])
+        if not isinstance(events, list):
+            events = []
+        if any(isinstance(event, dict) and event.get("event_id") == body.event_id for event in events):
+            return {"saved": True, "duplicate": True}
+        events.append({
+            "event_id": body.event_id,
+            "project": body.project.strip(),
+            "language": body.language.strip(),
+            "duration_ms": body.duration_ms,
+        })
+        data[body.day] = events
+        DATABASE_DIR.mkdir(parents=True, exist_ok=True)
+        CODING_ACTIVITY_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    return {"saved": True}
 
 class RecapIn(BaseModel):
     topics : list[Union[str,dict]]

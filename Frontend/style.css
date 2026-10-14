@@ -76,6 +76,7 @@ body {
 .streak-panel,
 .topics-panel,
 .yesterday-panel,
+.weekly-panel,
 .timer-panel {
     min-width: 0;
     border: 1px solid rgba(228, 232, 241, 0.95);
@@ -214,10 +215,39 @@ button:focus-visible {
 
 .yesterday-panel {
     grid-column: 1 / -1;
-    grid-row: 3;
+    grid-row: 4;
     padding: 24px;
     background: linear-gradient(135deg, #fff 0%, #f9faff 100%);
 }
+
+.weekly-panel {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    padding: 24px;
+}
+
+.weekly-goal-control { display: grid; gap: 5px; color: #758096; font-size: 0.7rem; font-weight: 700; }
+.weekly-goal-control span { display: flex; align-items: center; gap: 6px; color: #68748b; font-size: 0.73rem; }
+.weekly-goal-control input { width: 58px; height: 34px; padding: 0 8px; border: 1px solid #e4e8f0; border-radius: 9px; color: #34415b; background: #fff; font: inherit; font-size: 0.8rem; }
+.weekly-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
+.weekly-stat { display: flex; min-height: 82px; flex-direction: column; justify-content: center; padding: 13px 15px; border: 1px solid #e9edf4; border-radius: 13px; background: #fbfcff; }
+.weekly-stat strong { color: #344fae; font: 800 1.18rem 'Manrope', 'Segoe UI', sans-serif; font-variant-numeric: tabular-nums; }
+.weekly-goal-progress { margin-top: 16px; }
+.weekly-goal-copy { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 7px; color: #748097; font-size: 0.73rem; font-weight: 700; }
+.weekly-goal-track { height: 9px; overflow: hidden; border-radius: 999px; background: #edf0f7; }
+.weekly-goal-track span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #526de5, #7c8df0); transition: width 250ms ease; }
+.weekly-chart { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; height: 150px; margin-top: 19px; }
+.weekly-day { display: grid; min-width: 0; grid-template-rows: 1fr auto auto; justify-items: center; gap: 6px; color: #8992a5; font-size: 0.68rem; }
+.weekly-legend { display: flex; justify-content: flex-end; gap: 14px; margin-top: 17px; color: #748097; font-size: 0.69rem; }
+.weekly-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.weekly-legend i { width: 9px; height: 9px; border-radius: 3px; }
+.legend-focus { background: #526de5; }
+.legend-coding { background: #91a0ef; }
+.weekly-bar-area { display: flex; width: 100%; height: 100%; align-items: flex-end; justify-content: center; gap: 4px; border-bottom: 1px solid #e8ecf3; }
+.weekly-bar { width: min(42%, 20px); min-height: 3px; height: var(--bar-height); border-radius: 6px 6px 2px 2px; background: #dfe5fa; }
+.weekly-bar.coding-bar { background: #cbd3f4; }
+.weekly-day.is-today .weekly-bar.focus-bar { background: #526de5; }
+.weekly-day.has-activity .weekly-bar.coding-bar { background: #91a0ef; }
 
 .section-heading {
     display: flex;
@@ -399,11 +429,12 @@ button:focus-visible {
     .page-shell { width: min(100% - 32px, 560px); }
     .page-header { padding: 32px 0 23px; }
     .dashboard-content { grid-template-columns: 1fr; gap: 14px; }
-    #container, .streak-panel, .topics-panel, .yesterday-panel { grid-column: 1; }
+    #container, .streak-panel, .topics-panel, .weekly-panel, .yesterday-panel { grid-column: 1; }
     #container { grid-row: 1; }
     .streak-panel { grid-row: 2; padding: 20px; }
     .topics-panel { grid-row: 3; padding: 20px; }
-    .yesterday-panel { grid-row: 4; padding: 20px; }
+    .weekly-panel { grid-row: 4; padding: 20px; }
+    .yesterday-panel { grid-row: 5; padding: 20px; }
     .yesterday-summary { grid-template-columns: 1fr; }
     .streak-card { min-height: 125px; }
     .github-push-card { align-items: stretch; flex-direction: column; }
@@ -417,6 +448,12 @@ button:focus-visible {
     .streak-card { min-height: 116px; padding: 14px; }
     .streak-value { font-size: 2rem; }
     .topics-drawer { width: 100%; padding: 20px; }
+    .weekly-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    .weekly-stat { min-height: 74px; padding: 10px; }
+    .weekly-stat strong { font-size: 0.94rem; }
+    .weekly-chart { gap: 5px; height: 132px; }
+    .weekly-day { font-size: 0.62rem; }
+    .weekly-legend { justify-content: flex-start; gap: 10px; font-size: 0.62rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

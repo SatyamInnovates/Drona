@@ -9,6 +9,7 @@ from datetime import date, timedelta
 from config import configured_repo
 from settings import choose_category, FOLDER_CATEGORY
 
+
 backend_dir = Path(__file__).resolve().parent
 database_dir = backend_dir.parent / "Database"
 

@@ -121,6 +121,43 @@
                 </div>
             </section>
 
+            <section class="weekly-panel" aria-labelledby="weekly-heading">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">THIS WEEK</p>
+                        <h2 id="weekly-heading">Weekly progress</h2>
+                    </div>
+                    <label class="weekly-goal-control" for="weekly-goal-hours">
+                        Weekly goal
+                        <span><input id="weekly-goal-hours" type="number" min="1" max="168" step="1" value="5" inputmode="numeric"> hrs</span>
+                    </label>
+                </div>
+                <div class="weekly-summary" aria-live="polite">
+                    <article class="weekly-stat">
+                        <span class="readout-label">Manual focus</span>
+                        <strong id="weekly-focus-total">Loading…</strong>
+                    </article>
+                    <article class="weekly-stat">
+                        <span class="readout-label">Coding time</span>
+                        <strong id="weekly-coding-total">Loading…</strong>
+                    </article>
+                    <article class="weekly-stat">
+                        <span class="readout-label">Study days</span>
+                        <strong id="weekly-study-days">—</strong>
+                    </article>
+                    <article class="weekly-stat">
+                        <span class="readout-label">Topics covered</span>
+                        <strong id="weekly-topic-total">—</strong>
+                    </article>
+                </div>
+                <div class="weekly-goal-progress" role="group" aria-label="Weekly focus goal progress">
+                    <div class="weekly-goal-copy"><span id="weekly-goal-label">0 of 5 hours</span><span id="weekly-goal-percent">0%</span></div>
+                    <div class="weekly-goal-track" id="weekly-goal-track" role="progressbar" aria-label="Weekly focus goal" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0"><span id="weekly-goal-fill"></span></div>
+                </div>
+                <div class="weekly-legend" aria-hidden="true"><span><i class="legend-focus"></i>Manual focus</span><span><i class="legend-coding"></i>Coding activity</span></div>
+                <div class="weekly-chart" id="weekly-chart" aria-label="Daily manual focus and automatic coding time from Monday through Sunday" aria-live="polite"></div>
+            </section>
+
             <section class="yesterday-panel" aria-labelledby="yesterday-heading">
                 <div class="section-heading">
                     <div>

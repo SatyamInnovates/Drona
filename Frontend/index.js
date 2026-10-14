@@ -150,6 +150,128 @@ function renderTopicList(list, topics, emptyMessage) {
 
 const todayIso = localIsoDate(new Date());
 const yesterdayIso = localIsoDate(yesterday);
+const weeklyChart = document.getElementById('weekly-chart');
+const weeklyGoalInput = document.getElementById('weekly-goal-hours');
+const weeklyGoalStorageKey = 'drona-weekly-focus-goal-hours';
+let weeklyDays = [];
+let weeklyTopics = [];
+let weeklySessionsAvailable = false;
+let weeklyCodingAvailable = false;
+try {
+    const savedGoal = Number(localStorage.getItem(weeklyGoalStorageKey));
+    if (Number.isFinite(savedGoal) && savedGoal >= 1 && savedGoal <= 168) weeklyGoalInput.value = String(savedGoal);
+} catch {}
+
+function renderWeeklyProgress() {
+    if (!weeklyDays.length) return;
+    const goalHours = Math.min(168, Math.max(1, Number(weeklyGoalInput.value) || 5));
+    weeklyGoalInput.value = String(goalHours);
+    const todayDay = weeklyDays.find(day => day.iso === localIsoDate(new Date()));
+    const todayFocus = todayDay && todayDay.iso === localIsoDate(new Date())
+        ? sessions.reduce((sum, ms) => sum + ms, 0) + (isRunning ? Date.now() - segmentStart : 0)
+        : 0;
+    const totalFocusMs = weeklyDays.reduce((sum, day) => sum + (day.iso === localIsoDate(new Date()) ? todayFocus : day.focusMs), 0);
+    const totalCodingMs = weeklyDays.reduce((sum, day) => sum + day.codingMs, 0);
+    const topicNames = new Set(weeklyTopics.map(topic => String(topic.topic || '').trim()).filter(Boolean));
+    const studiedDays = new Set([
+        ...weeklyDays.filter(day => day.focusMs > 0 || day.codingMs > 0 || (day.iso === todayDay?.iso && todayFocus > 0)).map(day => day.iso),
+        ...weeklyTopics.map(topic => topic.date)
+    ]);
+    document.getElementById('weekly-focus-total').textContent = weeklySessionsAvailable ? formatTime(totalFocusMs) : 'Unavailable';
+    document.getElementById('weekly-coding-total').textContent = weeklyCodingAvailable ? formatTime(totalCodingMs) : 'Unavailable';
+    document.getElementById('weekly-study-days').textContent = weeklySessionsAvailable || weeklyCodingAvailable ? `${studiedDays.size} / 7` : '—';
+    document.getElementById('weekly-topic-total').textContent = String(topicNames.size);
+    const progress = totalFocusMs / (goalHours * 60 * 60 * 1000);
+    const percent = Math.round(progress * 100);
+    document.getElementById('weekly-goal-label').textContent = `${formatTime(totalFocusMs)} of ${goalHours} ${goalHours === 1 ? 'hour' : 'hours'}`;
+    document.getElementById('weekly-goal-percent').textContent = `${percent}%`;
+    const goalTrack = document.getElementById('weekly-goal-track');
+    goalTrack.setAttribute('aria-valuemax', String(goalHours));
+    goalTrack.setAttribute('aria-valuenow', String(Math.min(goalHours, totalFocusMs / 3600000).toFixed(2)));
+    document.getElementById('weekly-goal-fill').style.width = `${Math.min(100, progress * 100)}%`;
+
+    const maxFocus = Math.max(1, ...weeklyDays.map(day => day.focusMs), ...weeklyDays.map(day => day.codingMs), todayFocus);
+    weeklyChart.replaceChildren();
+    weeklyDays.forEach(day => {
+        const focusMs = day.iso === todayDay?.iso ? todayFocus : day.focusMs;
+        const codingMs = day.codingMs;
+        const column = document.createElement('div');
+        column.className = `weekly-day${day.iso === todayDay?.iso ? ' is-today' : ''}${codingMs > 0 ? ' has-activity' : ''}`;
+        column.title = `${day.date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}: manual focus ${formatTime(focusMs)}, coding ${formatTime(codingMs)}`;
+        const area = document.createElement('div');
+        area.className = 'weekly-bar-area';
+        const focusBar = document.createElement('span');
+        focusBar.className = 'weekly-bar focus-bar';
+        focusBar.style.setProperty('--bar-height', `${focusMs ? Math.max(5, focusMs / maxFocus * 100) : 0}%`);
+        const codingBar = document.createElement('span');
+        codingBar.className = 'weekly-bar coding-bar';
+        codingBar.style.setProperty('--bar-height', `${codingMs ? Math.max(5, codingMs / maxFocus * 100) : 0}%`);
+        area.append(focusBar, codingBar);
+        const label = document.createElement('span');
+        label.className = 'weekly-day-label';
+        label.textContent = day.date.toLocaleDateString(undefined, { weekday: 'short' });
+        const time = document.createElement('span');
+        time.className = 'weekly-day-time';
+        time.textContent = `${formatShortTime(focusMs)}|${formatShortTime(codingMs)}`;
+        column.append(area, label, time);
+        weeklyChart.append(column);
+    });
+}
+
+function formatShortTime(ms) {
+    const hours = Math.floor(ms / 3600000);
+    const minutes = Math.floor(ms / 60000) % 60;
+    if (hours) return `${hours}h${minutes ? ` ${minutes}m` : ''}`;
+    return `${minutes}m`;
+}
+
+weeklyGoalInput.addEventListener('change', () => {
+    const goal = Math.min(168, Math.max(1, Number(weeklyGoalInput.value) || 5));
+    weeklyGoalInput.value = String(goal);
+    try { localStorage.setItem(weeklyGoalStorageKey, String(goal)); } catch {}
+    renderWeeklyProgress();
+});
+
+const weekStart = new Date();
+weekStart.setHours(0, 0, 0, 0);
+weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+weeklyDays = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(weekStart);
+    day.setDate(weekStart.getDate() + index);
+    return { date: day, iso: localIsoDate(day), focusMs: 0, codingMs: 0 };
+});
+
+async function loadWeeklyProgress() {
+    const [sessionResult, codingResult, topicResult] = await Promise.allSettled([
+        Promise.all(weeklyDays.map(async day => {
+            const response = await fetch('/api/focus-sessions?day=' + encodeURIComponent(day.iso), { cache: 'no-store' });
+            if (!response.ok) throw new Error('Could not load weekly focus sessions');
+            const data = await response.json();
+            day.focusMs = Array.isArray(data.sessions) ? data.sessions.reduce((sum, ms) => sum + (Number(ms) || 0), 0) : 0;
+        })),
+        Promise.all(weeklyDays.map(async day => {
+            const response = await fetch('/api/coding-activity?day=' + encodeURIComponent(day.iso), { cache: 'no-store' });
+            if (!response.ok) throw new Error('Could not load weekly coding activity');
+            const data = await response.json();
+            day.codingMs = Number(data.total_ms) || 0;
+        })),
+        fetch('../Database/data.json?day=' + todayIso, { cache: 'no-store' }).then(response => {
+            if (!response.ok) throw new Error('Could not load weekly topics');
+            return response.json();
+        })
+    ]);
+    weeklySessionsAvailable = sessionResult.status === 'fulfilled';
+    weeklyCodingAvailable = codingResult.status === 'fulfilled';
+    if (topicResult.status === 'fulfilled') {
+        const weekDates = new Set(weeklyDays.map(day => day.iso));
+        weeklyTopics = topicResult.value.filter(commit => weekDates.has(commit.date));
+    }
+    renderWeeklyProgress();
+}
+
+void loadWeeklyProgress();
+setInterval(() => { void loadWeeklyProgress(); }, 30_000);
+
 const historyToggle = document.getElementById('history-toggle');
 const historyDrawer = document.getElementById('yesterday-topics-drawer');
 const yesterdayTopicsList = document.getElementById('yesterday-topics-list');
@@ -318,6 +440,7 @@ async function syncSessions() {
             if (!serverSavedSessions.length && sessions.length) await saveSessionsToServer();
         }
         showTotal();
+        renderWeeklyProgress();
     } catch {
         if (recoveredActiveMs > 0) {
             sessions.push(recoveredActiveMs);
@@ -351,6 +474,7 @@ function stop(){
         isRunning = false;
         saveSessionsToServer();
         showTotal();
+        renderWeeklyProgress();
     }
 }
 
@@ -368,12 +492,14 @@ function reset(){
     saveSessionsToServer();
     display.textContent = "00:00:00";
     showTotal();
+    renderWeeklyProgress();
 }
 
 function update(){
     elapsetTime = Date.now() - startTime;
     display.textContent = formatTime(elapsetTime);
     showTotal();
+    renderWeeklyProgress();
 }
 
 function showTotal(){
