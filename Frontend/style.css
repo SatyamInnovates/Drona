@@ -433,6 +433,9 @@ button:focus-visible {
 .file-list { display: grid; max-height: 220px; gap: 7px; overflow: auto; margin: 0; padding: 0; list-style: none; }
 .file-item { overflow: hidden; padding: 9px 11px; border: 1px solid #edf0f5; border-radius: 9px; color: #536078; background: #fafbfe; font: 0.76rem 'Consolas', 'SFMono-Regular', monospace; text-overflow: ellipsis; white-space: nowrap; }
 
+.site-footer { padding: 8px 16px 28px; text-align: center; font-size: 0.78rem; }
+.site-footer p { margin: 4px 0; }
+
 @media (max-width: 760px) {
     .page-shell { width: min(100% - 32px, 560px); }
     .page-header { padding: 32px 0 23px; }

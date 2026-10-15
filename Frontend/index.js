@@ -63,14 +63,16 @@ const githubPushCustomCategory = document.getElementById('github-push-custom-cat
 const copyInstallCommandButton = document.getElementById('copy-install-command');
 const installCommand = document.getElementById('install-command');
 const installCommandStatus = document.getElementById('install-command-status');
-copyInstallCommandButton.addEventListener('click', async () => {
-    try {
-        await navigator.clipboard.writeText(installCommand.textContent.trim());
-        installCommandStatus.textContent = 'Command copied. Run it from the extracted Drona folder.';
-    } catch {
-        installCommandStatus.textContent = 'Copy was blocked. Select the command above and copy it manually.';
-    }
-});
+if (copyInstallCommandButton && installCommand && installCommandStatus) {
+    copyInstallCommandButton.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(installCommand.textContent.trim());
+            installCommandStatus.textContent = 'Command copied. Run it from the extracted Drona folder.';
+        } catch {
+            installCommandStatus.textContent = 'Copy was blocked. Select the command above and copy it manually.';
+        }
+    });
+}
 
 githubPushCategory.addEventListener('change', () => {
     const wantsCustom = githubPushCategory.value === 'custom';
