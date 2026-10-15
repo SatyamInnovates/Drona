@@ -63,6 +63,31 @@ const githubPushCustomCategory = document.getElementById('github-push-custom-cat
 const copyInstallCommandButton = document.getElementById('copy-install-command');
 const installCommand = document.getElementById('install-command');
 const installCommandStatus = document.getElementById('install-command-status');
+const monochromeToggle = document.getElementById('monochrome-toggle');
+const monochromeLabel = monochromeToggle.querySelector('.toggle-label');
+const monochromeStorageKey = 'drona-monochrome-enabled';
+
+function setMonochromeMode(enabled) {
+    document.documentElement.classList.toggle('monochrome', enabled);
+    monochromeToggle.setAttribute('aria-pressed', String(enabled));
+    monochromeToggle.setAttribute('aria-label', enabled ? 'Switch to color display' : 'Switch to black and white display');
+    monochromeLabel.textContent = enabled ? 'Color' : 'Black & white';
+}
+
+let monochromeEnabled = false;
+try {
+    monochromeEnabled = localStorage.getItem(monochromeStorageKey) === 'true';
+} catch {}
+setMonochromeMode(monochromeEnabled);
+
+monochromeToggle.addEventListener('click', () => {
+    monochromeEnabled = !monochromeEnabled;
+    setMonochromeMode(monochromeEnabled);
+    try {
+        localStorage.setItem(monochromeStorageKey, String(monochromeEnabled));
+    } catch {}
+});
+
 if (copyInstallCommandButton && installCommand && installCommandStatus) {
     copyInstallCommandButton.addEventListener('click', async () => {
         try {
@@ -168,6 +193,7 @@ const weeklyChart = document.getElementById('weekly-chart');
 const weeklyGoalInput = document.getElementById('weekly-goal-hours');
 const weeklyGoalStorageKey = 'drona-weekly-focus-goal-hours';
 let weeklyDays = [];
+
 let weeklyTopics = [];
 let weeklySessionsAvailable = false;
 let weeklyCodingAvailable = false;
@@ -328,12 +354,11 @@ fetch('../Database/data.json?day=' + todayIso, { cache: 'no-store' })
         renderTopicList(yesterdayTopicsList,[],'Today topics are not available');
     }
 )
-// Reload at local midnight so the date labels and day-specific data roll over.
+
 const tomorrow = new Date();
 tomorrow.setHours(24, 0, 1, 0);
 setTimeout(() => window.location.reload(), tomorrow.getTime() - Date.now());
 
-// Yesterday's focus time is stored by the existing daily timer key.
 document.getElementById('yesterday-date').textContent = yesterday.toLocaleDateString(undefined, {
     weekday: 'short', month: 'short', day: 'numeric'
 });
