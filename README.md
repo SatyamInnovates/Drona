@@ -27,6 +27,22 @@ During setup, choose `y` and enter the path to a Git repository with an `origin`
 
 ## Important
 
+<<<<<<< HEAD
 - Drona currently supports Windows. The server listens only on this computer (`127.0.0.1`).
 - Keep `.env` and the local `Database` JSON files private. They contain API keys or per-user settings and activity.
 - Optional AI recaps require `GROQ_API_KEY` in a private `.env` file.
+=======
+The dashboard's **Push To Github** action commits changes in that repository and auto pushes them to `origin/main`. Review changes before pushing.
+
+##API key
+in the .env give your groq api key => GROQ_API_KEY="your_api_key"
+## Local files
+
+- Dashboard: `Frontend/`
+- Server: `Backend(main files)/server2.py`
+- Extension source: `drona-activity-tracker/src/extension.ts`
+- Local records and settings: `Database/`
+- Optional AI recap key: set `GROQ_API_KEY` in a private `.env` file.
+
+Do not share `.env` or personal database files. The server listens on this computer only (`127.0.0.1`).
+>>>>>>> 036c6e288467961574911c0907bce206f71e2c17
