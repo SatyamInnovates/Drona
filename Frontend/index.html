@@ -10,9 +10,12 @@
 <body>
     <main class="page-shell">
         <header class="page-header">
-            <p class="eyebrow">YOUR LEARNING WORKSPACE</p>
-            <h1 id="heading">Drona</h1>
-            <p id="sub-heading">Your planner and auto agent</p>
+            <div class="header-copy">
+                <p class="eyebrow">YOUR LEARNING WORKSPACE</p>
+                <h1 id="heading">Drona</h1>
+                <p id="sub-heading">Your planner and auto agent</p>
+            </div>
+            <button id="monochrome-toggle" class="monochrome-toggle" type="button" aria-pressed="false" aria-label="Switch to black and white display"><span aria-hidden="true">◐</span><span class="toggle-label">Black &amp; white</span></button>
         </header>
 
         <section class="dashboard-content" aria-labelledby="streak-heading">
@@ -158,6 +161,24 @@
                 <div class="weekly-chart" id="weekly-chart" aria-label="Daily manual focus and automatic coding time from Monday through Sunday" aria-live="polite"></div>
             </section>
 
+            <section class="focus-plan-panel" aria-labelledby="focus-plan-heading">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">MAKE TODAY COUNT</p>
+                        <h2 id="focus-plan-heading">Today's focus plan</h2>
+                    </div>
+                    <div class="focus-plan-progress" aria-live="polite"><strong id="plan-completion">0/0</strong><span>complete</span></div>
+                </div>
+                <div class="plan-progress-track" role="progressbar" aria-label="Today's plan completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="plan-progress-track"><span id="plan-progress-fill"></span></div>
+                <form id="plan-form" class="plan-form">
+                    <label class="visually-hidden" for="plan-task-input">Add a focus task</label>
+                    <input id="plan-task-input" type="text" maxlength="120" placeholder="Add a task you want to finish today…" autocomplete="off" required>
+                    <button class="recap-button" type="submit"><span aria-hidden="true">＋</span> Add task</button>
+                </form>
+                <ul id="plan-task-list" class="plan-task-list" aria-live="polite"></ul>
+                <p class="plan-footer"><span aria-hidden="true">✦</span> Small, clear goals make it easier to start.</p>
+            </section>
+
             <section class="yesterday-panel" aria-labelledby="yesterday-heading">
                 <div class="section-heading">
                     <div>
@@ -196,5 +217,6 @@
     </footer>
 
     <script src="index.js"></script>
+    <script src="features.js"></script>
 </body>
 </html>

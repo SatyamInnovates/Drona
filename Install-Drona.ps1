@@ -47,9 +47,59 @@ if ($LASTEXITCODE -ne 0) { throw "Could not update pip in Drona's local environm
 & $venvPython -m pip install fastapi uvicorn requests
 if ($LASTEXITCODE -ne 0) { throw "Could not install Drona's Python packages." }
 
-$gitCommand = Get-Command git -ErrorAction SilentlyContinue
+function Get-DronaGitCommand {
+    $command = Get-Command git -ErrorAction SilentlyContinue
+    if ($command) { return $command }
+
+    $gitExeCandidates = @(
+        (Join-Path $env:ProgramFiles 'Git\cmd\git.exe'),
+        (Join-Path $env:LOCALAPPDATA 'Programs\Git\cmd\git.exe'),
+        (Join-Path ${env:ProgramFiles(x86)} 'Git\cmd\git.exe')
+    )
+    foreach ($gitExe in $gitExeCandidates) {
+        if (Test-Path -LiteralPath $gitExe) {
+            $gitDirectory = Split-Path -Parent $gitExe
+            $env:Path = "$gitDirectory;$env:Path"
+            return Get-Command git -ErrorAction SilentlyContinue
+        }
+    }
+    return $null
+}
+
+$gitCommand = Get-DronaGitCommand
+if (-not $gitCommand) {
+    Write-Host 'Git is required by Drona and was not found. Installing Git for Windows...'
+    $wingetCommand = Get-Command winget -ErrorAction SilentlyContinue
+    if ($wingetCommand) {
+        & $wingetCommand.Source install --id Git.Git --exact --source winget --accept-source-agreements --accept-package-agreements --silent
+        $gitCommand = Get-DronaGitCommand
+    }
+
+    if (-not $gitCommand) {
+        Write-Host 'Installing Git using the official Git for Windows installer...'
+        $gitInstaller = Join-Path $env:TEMP 'Drona-Git-Installer.exe'
+        try {
+            Invoke-WebRequest -Uri 'https://github.com/git-for-windows/git/releases/latest/download/Git-64-bit.exe' -OutFile $gitInstaller
+            $gitInstallProcess = Start-Process -FilePath $gitInstaller -ArgumentList '/VERYSILENT /NORESTART /SP-' -Wait -PassThru
+            if ($gitInstallProcess.ExitCode -ne 0) {
+                throw "The Git installer exited with code $($gitInstallProcess.ExitCode)."
+            }
+        } catch {
+            throw "Git is required, but automatic installation failed. Install Git from https://git-scm.com/install/windows, then run this setup again. Details: $($_.Exception.Message)"
+        } finally {
+            if (Test-Path -LiteralPath $gitInstaller) { Remove-Item -LiteralPath $gitInstaller -Force }
+        }
+        $gitCommand = Get-DronaGitCommand
+    }
+
+    if (-not $gitCommand) {
+        throw 'Git installation finished, but git.exe could not be found. Restart PowerShell and run Install-Drona.ps1 again.'
+    }
+    Write-Host 'Git is installed and ready.' -ForegroundColor Green
+}
+
 if ($gitCommand) {
-    $setupGit = Read-Host "Set up Drona's optional GitHub push feature now? Enter y or press Enter to skip"
+    $setupGit = Read-Host "Set up Drona's GitHub push feature now? Enter y or press Enter to skip"
     if ($setupGit -match '^(y|yes)$') {
         while ($true) {
             $repoInput = (Read-Host 'Enter the full path to your Git repository').Trim().Trim('"').Trim("'")
@@ -83,12 +133,14 @@ if ($gitCommand) {
             break
         }
     }
-} else {
-    Write-Host 'Git was not found. The dashboard and activity tracker will work; install Git later if you want the push feature.' -ForegroundColor Yellow
 }
 
-$vsixPath = Join-Path $projectDir 'drona-activity-tracker\drona-activity-tracker-0.0.1.vsix'
-if (Test-Path -LiteralPath $vsixPath) {
+$vsixDirectory = Join-Path $projectDir 'drona-activity-tracker'
+$vsixPackage = Get-ChildItem -LiteralPath $vsixDirectory -Filter '*.vsix' -File -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+if ($vsixPackage) {
+    $vsixPath = $vsixPackage.FullName
     $codeCommand = Get-Command code -ErrorAction SilentlyContinue
     if ($codeCommand) {
         Write-Host 'Installing the Drona VS Code extension...'
@@ -101,7 +153,7 @@ if (Test-Path -LiteralPath $vsixPath) {
         Write-Host $vsixPath
     }
 } else {
-    Write-Host 'The VSIX package is missing. You can still use the dashboard; install the extension later from a Drona VSIX package.' -ForegroundColor Yellow
+    Write-Host 'The Drona VS Code extension package is missing. The dashboard works, but automatic coding-time tracking needs the extension.' -ForegroundColor Yellow
 }
 
 Write-Host ''

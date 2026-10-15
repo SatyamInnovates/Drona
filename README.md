@@ -11,17 +11,17 @@ Local learning and coding activity tracker for Windows. Each person runs their o
    powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Drona.ps1
    ```
 
-   Setup creates a private Python environment, installs the server packages, offers to configure a Git repository, and installs the VS Code extension when the `code` command is available. It requires Python 3.10 or newer. Git, VS Code, and a GitHub login are only needed for their optional features.
+   Setup creates a private Python environment, installs the server packages, installs Git if it is missing, offers to configure a Git repository, and installs the VS Code extension when VS Code is available. It requires Python 3.10 or newer. VS Code is needed for automatic coding-time tracking; a GitHub login is needed for pushing commits.
 
 3. Start the app by double-clicking `Start Drona.bat`. Keep the server window open. The dashboard opens at <http://127.0.0.1:8000/Frontend/>.
 
 ## VS Code tracking
 
-The installer uses `drona-activity-tracker/drona-activity-tracker-0.0.1.vsix`. If it cannot install it automatically, install that file from VS Code's **Extensions** panel using **Install from VSIX...**.
+The installer uses `drona-activity-tracker/drona-activity-tracker-0.0.2.vsix`. If it cannot install it automatically, install that file from VS Code's **Extensions** panel using **Install from VSIX...**.
 
 Tracking sends the workspace name, language, and time to the local Drona server. It does not send file contents or full paths. By default, it stops counting five minutes after the last edit.
 
-## Optional GitHub push
+## GitHub push
 
 During setup, choose `y` and enter the path to a Git repository with an `origin` remote, checked out on its `main` branch. Set up GitHub authentication for that repository first. The dashboard push action commits changes and pushes to `origin/main`; review your changes before using it.
 
