@@ -186,6 +186,19 @@
                     </div>
                 </div>
             </section>
+
+            <section class="install-guide" aria-labelledby="install-guide-heading">
+                <div>
+                    <p class="eyebrow">SHARE DRONA</p>
+                    <h2 id="install-guide-heading">Set up Drona on another computer</h2>
+                    <p>First share the Drona project folder or ZIP with them. After they extract it, they should open PowerShell in that folder and run:</p>
+                </div>
+                <div class="install-command-row">
+                    <code id="install-command">powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Drona.ps1</code>
+                    <button id="copy-install-command" class="recap-button" type="button">Copy command</button>
+                </div>
+                <p class="install-note" id="install-command-status" aria-live="polite">Python 3.10 or newer is required. Git and VS Code are optional.</p>
+            </section>
         </section>
     </main>
 

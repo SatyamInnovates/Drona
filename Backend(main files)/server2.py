@@ -26,6 +26,7 @@ CODING_ACTIVITY_LOCK = threading.Lock()
 MAIN_SCRIPT = Path(__file__).resolve().with_name("main.py")
 
 
+
 def load_local_env():
     env_file = PROJECT_DIR / ".env"
     try:
@@ -44,6 +45,8 @@ def load_local_env():
             os.environ[name] = value
           
           
+          
+          
         
 load_local_env()
 app = FastAPI()
@@ -52,6 +55,7 @@ app = FastAPI()
 #     StaticFiles(directory=PROJECT_DIR / "Frontend", html=True),
 #     name="frontend",
 # )
+
 def read_sessions():
     try:
         data = json.loads(SESSIONS_FILE.read_text(encoding='utf-8'))

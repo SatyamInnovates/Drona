@@ -13,7 +13,6 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 
-
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATABASE_DIR = PROJECT_DIR / "Database"
 SESSIONS_FILE = DATABASE_DIR / "focus_sessions.json"
@@ -39,7 +38,6 @@ def load_local_env():
         value = value.strip().strip("\"'")
         if name and name not in os.environ:
             os.environ[name] = value
-
 
 load_local_env()
 

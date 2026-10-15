@@ -388,6 +388,14 @@ button:focus-visible {
 .github-push-category { min-height: 38px; padding: 0 10px; border: 1px solid #e4e8f0; border-radius: 10px; color: #536078; background: #fff; font: inherit; font-size: 0.78rem; }
 .github-push-controls button { grid-column: 1 / -1; justify-self: stretch; }
 
+.install-guide { grid-column: 1 / -1; display: grid; gap: 12px; padding: 22px 24px; border: 1px solid #e4e9f5; border-radius: 18px; background: linear-gradient(135deg, #f7f8ff, #fff); box-shadow: var(--shadow); }
+.install-guide h2 { margin: 5px 0 0; color: var(--ink); font: 800 1.12rem 'Manrope', 'Segoe UI', sans-serif; }
+.install-guide p:not(.eyebrow) { margin: 8px 0 0; color: #68748b; font-size: 0.82rem; line-height: 1.55; }
+.install-command-row { display: flex; align-items: center; gap: 10px; }
+.install-command-row code { min-width: 0; flex: 1; padding: 12px 14px; border: 1px solid #e5e9f2; border-radius: 10px; color: #35415a; background: #f8f9fc; font: 0.78rem 'Consolas', 'SFMono-Regular', monospace; overflow-wrap: anywhere; }
+.install-command-row button { flex: 0 0 auto; }
+.install-guide .install-note { margin: 0; color: #8992a5; font-size: 0.72rem; }
+
 .history-toggle { display: block; margin: 15px 0 0 auto; color: #4f67d0; background: #f6f7ff; }
 
 .topics-drawer {
@@ -439,6 +447,7 @@ button:focus-visible {
     .streak-card { min-height: 125px; }
     .github-push-card { align-items: stretch; flex-direction: column; }
     .github-push-controls { grid-template-columns: auto minmax(0, 1fr); }
+    .install-command-row { align-items: stretch; flex-direction: column; }
 }
 
 @media (max-width: 430px) {
