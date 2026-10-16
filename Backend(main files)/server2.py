@@ -21,7 +21,7 @@ CODING_ACTIVITY_FILE = DATABASE_DIR / "coding_activity.json"
 DAY_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "openai/gpt-oss-20b"
-PUSH_LOCK = threading.Lock()
+ACTIVITY_UPDATE_LOCK = threading.Lock()
 CODING_ACTIVITY_LOCK = threading.Lock()
 MAIN_SCRIPT = Path(__file__).resolve().with_name("main.py")
 
@@ -233,6 +233,7 @@ def recap(body:RecapIn):
 
 class Github_data(BaseModel):
     category:str
+    push: bool = False
     
 @app.post("/api/github-push")
 def github_push(body:Github_data,request:Request):
@@ -242,13 +243,23 @@ def github_push(body:Github_data,request:Request):
         raise HTTPException(status_code=403, detail="GitHub push requests must come from this local dashboard.")
     category = body.category.strip()
     if not category or len(category) > 100:
-        raise HTTPException(status_code=400, detail="Choose a category before pushing.")
-    if not PUSH_LOCK.acquire(blocking=False):
-        raise HTTPException(status_code=409, detail="A GitHub push is already running.")
+        raise HTTPException(status_code=400, detail="Choose a category before updating activity.")
+    if body.push:
+        try:
+            settings = json.loads((DATABASE_DIR / "repo_settings.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            settings = {}
+        if not isinstance(settings, dict) or settings.get("github_push_enabled") is not True:
+            raise HTTPException(status_code=403, detail="GitHub push is not enabled in Drona's installation settings.")
+    if not ACTIVITY_UPDATE_LOCK.acquire(blocking=False):
+        raise HTTPException(status_code=409, detail="An activity update is already running.")
     try:
         try:
+            command = [sys.executable, str(MAIN_SCRIPT), "--category", category]
+            if body.push:
+                command.append("--push")
             result = subprocess.run(
-                [sys.executable, str(MAIN_SCRIPT), "--category", category],
+                command,
                 cwd=str(PROJECT_DIR),
                 stdin=subprocess.DEVNULL,
                 capture_output=True,
@@ -259,18 +270,18 @@ def github_push(body:Github_data,request:Request):
                 check=False,
             )
         except subprocess.TimeoutExpired:
-                raise HTTPException(status_code=504, detail="The GitHub push timed out after five minutes.")
+                raise HTTPException(status_code=504, detail="The activity update timed out after five minutes.")
         except OSError as error:
-            print(f"Could not start GitHub push script: {error}")
-            raise HTTPException(status_code=500, detail="Could not start the push script.")
+            print(f"Could not start activity update script: {error}")
+            raise HTTPException(status_code=500, detail="Could not start the activity update.")
         output = (result.stdout or "").strip()
 
         if result.returncode != 0:
             details = (result.stderr or output or "The script exited without an error message.").strip()
-            print(f"GitHub push script failed ({result.returncode}): {details[:2000]}")
+            print(f"Activity update failed ({result.returncode}): {details[:2000]}")
             raise HTTPException(status_code=500, detail=details[-1200:])
         return {"success": True, "message": output or "Tracker finished successfully."}
     finally:
-        PUSH_LOCK.release()
+        ACTIVITY_UPDATE_LOCK.release()
         
 app.mount("/", StaticFiles(directory=str(PROJECT_DIR), html=True), name="static")

@@ -27,13 +27,23 @@ def get_streak(commits, category):
         current -= timedelta(days=1)
     return streak
 
-dsa_streak = get_streak(commits, "dsa")
-ml_streak = get_streak(commits, "Machine learning")
-streaks = {'dsa_streak':dsa_streak,'ml_streak':ml_streak}
 selected_category = load_category()
-if selected_category != FOLDER_CATEGORY:
-    streaks['selected_category'] = selected_category
-    streaks['selected_category_streak'] = get_streak(commits, selected_category)
+
+# Keep built-in categories visible and include every category in the activity
+# history, plus the selected category even if it has no activity yet.
+categories = {"dsa": "DSA", "machine learning": "Machine learning"}
+for commit in commits:
+    category = str(commit.get("category") or "").strip()
+    if category:
+        categories.setdefault(category.casefold(), category)
+if selected_category and selected_category != FOLDER_CATEGORY:
+    selected_category = selected_category.strip()
+    categories.setdefault(selected_category.casefold(), selected_category)
+
+streaks = {
+    category: get_streak(commits, category)
+    for category in categories.values()
+}
 
 today_topics = []
 yesterday_topics = []

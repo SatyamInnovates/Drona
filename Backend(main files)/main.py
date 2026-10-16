@@ -32,17 +32,31 @@ try:
     # print(parser)
     parser.add_argument("--repo", help="Change and save the repository path")
     parser.add_argument("--category", help="Use and save this category")
+    parser.add_argument("--push", action="store_true", help="Push the new commit to origin/main")
     args = parser.parse_args()
     # print(args)
     repo = configured_repo(args.repo)
     # print(repo)
 
     selected_category = choose_category(args.category)
+    if args.push:
+        settings_path = backend_dir.parent / "Database" / "repo_settings.json"
+        try:
+            install_settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            install_settings = {}
+        if not isinstance(install_settings, dict) or install_settings.get("github_push_enabled") is not True:
+            raise ValueError("GitHub push is not enabled in Drona's installation settings.")
+        remote = run(["git", "remote", "get-url", "origin"])
+        branch = run(["git", "branch", "--show-current"])
+        if remote.returncode != 0 or branch.returncode != 0 or branch.stdout.strip() != "main":
+            raise ValueError("GitHub push requires an origin remote and the selected repository's main branch.")
 except(ValueError) as error:
     print(f"Some error occured while fetching the path.(try again later) : {error}")
     raise SystemExit(1)
 
 # args = parser.parse_args()
+
 
 status = run(["git", "status", "--porcelain", "-z", "--untracked-files=all"])
 if status.returncode != 0:
@@ -66,6 +80,12 @@ while index < len(status_entries):
 
 if not changed_paths:
     print("No changes to commit.")
+    if args.push:
+        result = run(["git", "push", "origin", "main"])
+        if result.returncode != 0:
+            print(result.stderr)
+            raise SystemExit(result.returncode)
+        print("Pushed local commits to GitHub.")
 else:
     print(changed_paths)
     content_lines = changed_paths
@@ -80,20 +100,25 @@ else:
         message = '; '.join(messages)
         print(messages)
 
-        for cmd in (["git", "add", "-A", "--", *changed_paths],
-                    ["git", "commit", "-m", message],
-                    ["git", "push", "origin", "main"]):
+        commands = [
+            ["git", "add", "-A", "--", *changed_paths],
+            ["git", "commit", "-m", message],
+        ]
+        if args.push:
+            commands.append(["git", "push", "origin", "main"])
+        for cmd in commands:
             result = run(cmd)
             if result.returncode != 0:
                 print(result.stderr)
                 exit(result.returncode)
+        print("Committed and pushed to GitHub." if args.push else "Committed locally.")
 
 data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
 
 yesterday = date.today() - timedelta(days=1)
 today = yesterday + timedelta(days=1)
 file_output = run([
-    'git', 'log', 'origin/main', '--since', yesterday.isoformat(), '--until', today.isoformat(),
+    'git', 'log', 'HEAD', '--since', yesterday.isoformat(), '--until', today.isoformat(),
     '--format=', '--name-only', '--diff-filter=ACMR'
 ]).stdout
 yesterday_files = sorted({line.strip().replace('\\', '/') for line in file_output.splitlines() if line.strip()})
@@ -132,6 +157,4 @@ with (database_dir / 'yesterday_files.json').open('w', encoding='utf-8') as file
     json.dump(yesterday_files, file, ensure_ascii=False)
 
 update_streaks()
-if changed_paths:
-    print("Pushed to github successfully")
 

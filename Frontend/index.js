@@ -1,55 +1,38 @@
-﻿const ml_streak = document.getElementById('ml-streak');
-const dsa_streak = document.getElementById('dsa-streak');
-const selectedCategoryCard = document.getElementById('selected-category-card');
-const selectedCategoryLabel = document.getElementById('selected-category-label');
-const selectedCategoryValue = document.getElementById('selected-category-value');
+﻿const streakBoxes = document.getElementById('streak-boxes');
 const yesterday = new Date();
-
-
 yesterday.setDate(yesterday.getDate() - 1);
 const localIsoDate = value => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
 
-
-function calculateStreak(commits, category) {
-    const dates = new Set(commits
-        .filter(commit => commit.category?.trim().toLowerCase() === category.trim().toLowerCase())
-        .map(commit => commit.date));
-    const current = new Date();
-    let day = dates.has(localIsoDate(current)) ? current : new Date(current.getFullYear(), current.getMonth(), current.getDate() - 1);
-    let streak = 0;
-    while (dates.has(localIsoDate(day))) {
-        streak += 1;
-        day.setDate(day.getDate() - 1);
-    }
-    return streak;
-}
-
-Promise.all([
-    fetch('../Database/data.json?day=' + localIsoDate(new Date()), { cache: 'no-store' }).then(response => {
-        if (!response.ok) throw new Error('Could not load activity data');
+fetch('../Database/streaks.json?day=' + localIsoDate(new Date()), { cache: 'no-store' })
+    .then(response => {
+        if (!response.ok) throw new Error('Could not load streak data');
         return response.json();
-    }),
-    fetch('../Database/streaks.json?day=' + localIsoDate(new Date()), { cache: 'no-store' }).then(response => {
-        if (!response.ok) throw new Error('Could not load streak settings');
-        return response.json();
-    }).catch(() => ({}))
-])
-    .then(([commits, settings]) => {
-        ml_streak.textContent = calculateStreak(commits, 'Machine learning');
-        dsa_streak.textContent = calculateStreak(commits, 'DSA');
-        const selectedCategory = settings.selected_category;
-        const builtInCategories = ['dsa', 'machine learning'];
-        if (selectedCategory && !builtInCategories.includes(selectedCategory.trim().toLowerCase())) {
-            selectedCategoryLabel.textContent = selectedCategory;
-            selectedCategoryValue.textContent = calculateStreak(commits, selectedCategory);
-            selectedCategoryCard.hidden = false;
+    })
+    .then(streaks => {
+        streakBoxes.replaceChildren();
+        for (const [category, count] of Object.entries(streaks)) {
+            const card = document.createElement('article');
+            card.className = 'streak-card';
+
+            const label = document.createElement('span');
+            label.className = 'streak-label';
+            label.textContent = category;
+
+            const value = document.createElement('span');
+            value.className = 'streak-value';
+            value.textContent = count;
+
+            const caption = document.createElement('span');
+            caption.className = 'streak-caption';
+            caption.textContent = 'day streak';
+
+            card.append(label, value, caption);
+            streakBoxes.appendChild(card);
         }
     })
     .catch(() => {
-        ml_streak.textContent = '—';
-        dsa_streak.textContent = '—';
+        streakBoxes.textContent = 'Could not load streaks.';
     });
-
 const todayTopics = document.getElementById('today-topics');
 const topicCount = document.getElementById('topic-count');
 const recapButton = document.getElementById('generate-recap');
@@ -60,6 +43,21 @@ const githubPushButton = document.getElementById('github-push');
 const githubPushStatus = document.getElementById('github-push-status');
 const githubPushCategory = document.getElementById('github-push-category');
 const githubPushCustomCategory = document.getElementById('github-push-custom-category');
+let githubPushEnabled = false;
+fetch('../Database/repo_settings.json', { cache: 'no-store' })
+    .then(response => response.ok ? response.json() : {})
+    .then(settings => {
+        githubPushEnabled = settings.github_push_enabled === true;
+        githubPushButton.textContent = githubPushEnabled
+            ? 'Commit and push to GitHub'
+            : 'Commit and update activity';
+        githubPushStatus.textContent = githubPushEnabled
+            ? 'Click to commit and push your changes to origin/main. Drona will ask you to confirm first.'
+            : 'Click to commit your changes locally and update streaks. Nothing will be pushed to GitHub.';
+    })
+    .catch(() => {
+        githubPushEnabled = false;
+    });
 const copyInstallCommandButton = document.getElementById('copy-install-command');
 const installCommand = document.getElementById('install-command');
 const installCommandStatus = document.getElementById('install-command-status');
@@ -89,17 +87,22 @@ githubPushButton.addEventListener('click', async () => {
         githubPushCustomCategory.focus();
         return;
     }
+    if (githubPushEnabled && !window.confirm('Drona will stage and commit changed files in the selected repository, then push the main branch to origin. Continue?')) {
+        return;
+    }
     githubPushButton.disabled = true;
     githubPushStatus.classList.remove('recap-error');
-    githubPushStatus.textContent = 'Running the tracker and pushing changes…';
+    githubPushStatus.textContent = githubPushEnabled
+        ? 'Committing and pushing changes…'
+        : 'Committing locally and refreshing activity…';
     try {
         const response = await fetch('/api/github-push', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ category })
+            body: JSON.stringify({ category, push: githubPushEnabled })
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Could not push to GitHub.');
+        if (!response.ok) throw new Error(data.detail || data.error || 'Could not update activity.');
         githubPushStatus.textContent = data.message;
     } catch (error) {
         githubPushStatus.textContent = error.message || 'Could not push to GitHub. Please try again.';
@@ -197,6 +200,7 @@ function renderWeeklyProgress() {
     document.getElementById('weekly-study-days').textContent = weeklySessionsAvailable || weeklyCodingAvailable ? `${studiedDays.size} / 7` : '—';
     document.getElementById('weekly-topic-total').textContent = String(topicNames.size);
     const progress = totalFocusMs / (goalHours * 60 * 60 * 1000);
+    console.log(progress);
     const percent = Math.round(progress * 100);
     document.getElementById('weekly-goal-label').textContent = `${formatTime(totalFocusMs)} of ${goalHours} ${goalHours === 1 ? 'hour' : 'hours'}`;
     document.getElementById('weekly-goal-percent').textContent = `${percent}%`;
@@ -310,7 +314,7 @@ document.addEventListener('keydown', event => {
 
 
 
-// let's rewrite this code
+
 fetch('../Database/data.json?day=' + todayIso, { cache: 'no-store' })
     .then(response => {
         if (!response.ok) throw new Error("Could not fetch today's or yesterday's topics");
@@ -330,6 +334,20 @@ fetch('../Database/data.json?day=' + todayIso, { cache: 'no-store' })
     }
 )
 
+// fetch('../Database/data.json?day=' + todayIso, { cache: 'no-store' })
+//     .then(response => {
+//         if (!response.ok) throw new Error("could not fetch topics..Hmm have you commited?");
+//         return response.json();
+//     })
+//     .then(commits => {
+//         todayItems = commits.filter(commit => commit.date === todayIso);
+//         const yesterdayItems = commits.filter(commit => commit.date === yesterdayIso);
+//     })
+//     .catch(() => {
+//         topicCount.textContent = "-";
+//         renderTopicList(todayTopics,[],'Today topicss are not available')
+        
+//     })
 const tomorrow = new Date();
 tomorrow.setHours(24, 0, 1, 0);
 setTimeout(() => window.location.reload(), tomorrow.getTime() - Date.now());
@@ -381,7 +399,6 @@ fetch('../Database/yesterday_files.json?day=' + localIsoDate(yesterday), { cache
         error.textContent = 'Run the tracker to refresh yesterday’s GitHub activity.';
         yesterdayFiles.append(error);
     });
-
 
 
 // Timer 

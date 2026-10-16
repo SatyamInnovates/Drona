@@ -19,7 +19,7 @@ SESSIONS_FILE = DATABASE_DIR / "focus_sessions.json"
 DAY_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "openai/gpt-oss-20b"
-PUSH_LOCK = threading.Lock()
+ACTIVITY_UPDATE_LOCK = threading.Lock()
 MAIN_SCRIPT = Path(__file__).resolve().with_name("main.py")
 
 
@@ -189,17 +189,28 @@ class DashboardHandler(SimpleHTTPRequestHandler):
                 raise ValueError
             payload = json.loads(self.rfile.read(length))
             category = payload.get("category")
+            push_to_github = payload.get("push", False)
             if not isinstance(category, str) or not category.strip() or len(category) > 100:
+                raise ValueError
+            if not isinstance(push_to_github, bool):
                 raise ValueError
             category = category.strip()
         except (ValueError, TypeError, AttributeError, json.JSONDecodeError):
-            return self._write_json(400, {"error": "Choose a category before pushing."})
-        if not PUSH_LOCK.acquire(blocking=False):
-            return self._write_json(409, {"error": "A GitHub push is already running."})
+            return self._write_json(400, {"error": "Choose a category before updating activity."})
+        if push_to_github:
+            try:
+                settings = json.loads((DATABASE_DIR / "repo_settings.json").read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                settings = {}
+            if not isinstance(settings, dict) or settings.get("github_push_enabled") is not True:
+                return self._write_json(403, {"error": "GitHub push is not enabled in Drona's installation settings."})
         try:
             try:
+                command = [sys.executable, str(MAIN_SCRIPT), "--category", category]
+                if push_to_github:
+                    command.append("--push")
                 result = subprocess.run(
-                    [sys.executable, str(MAIN_SCRIPT), "--category", category],
+                    command,
                     cwd=str(PROJECT_DIR),
                     stdin=subprocess.DEVNULL,
                     capture_output=True,
@@ -210,22 +221,27 @@ class DashboardHandler(SimpleHTTPRequestHandler):
                     check=False,
                 )
             except subprocess.TimeoutExpired:
-                return self._write_json(504, {"error": "The GitHub push timed out after five minutes."})
+                return self._write_json(504, {"error": "The activity update timed out after five minutes."})
             except OSError as error:
-                self.log_error("Could not start GitHub push script: %s", error)
-                return self._write_json(500, {"error": "Could not start the push script."})
+                self.log_error("Could not start activity update script: %s", error)
+                return self._write_json(500, {"error": "Could not start the activity update."})
 
             output = (result.stdout or "").strip()
             if result.returncode != 0:
                 details = (result.stderr or output or "The script exited without an error message.").strip()
-                self.log_error("GitHub push script failed (%s): %s", result.returncode, details[:2000])
+                self.log_error("Activity update failed (%s): %s", result.returncode, details[:2000])
                 return self._write_json(500, {"error": details[-1200:]})
             return self._write_json(200, {
                 "success": True,
                 "message": output or "Tracker finished successfully.",
             })
         finally:
-            PUSH_LOCK.release()
+            ACTIVITY_UPDATE_LOCK.release()
+
+
+
+
+
 
 
 if __name__ == "__main__":

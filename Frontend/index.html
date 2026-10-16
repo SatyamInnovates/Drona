@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
-    <link rel="stylesheet" href="styles.css?v=20261016-9">
+    <link rel="stylesheet" href="styles.css?v=20261016-10">
     <title>Drona | Learning dashboard</title>
 </head>
 <body>
@@ -27,23 +27,7 @@
                     <span class="live-indicator" aria-label="Current streaks"></span>
                 </div>
 
-                <div class="streaks">
-                    <article class="streak-card dsa-streak">
-                        <span class="streak-label">DSA</span>
-                        <span class="streak-value" id="dsa-streak" aria-live="polite">—</span>
-                        <span class="streak-caption">day streak</span>
-                    </article>
-                    <article class="streak-card ml-streak">
-                        <span class="streak-label">Machine learning</span>
-                        <span class="streak-value" id="ml-streak" aria-live="polite">—</span>
-                        <span class="streak-caption">day streak</span>
-                    </article>
-                    <article class="streak-card selected-category-streak" id="selected-category-card" hidden>
-                        <span class="streak-label" id="selected-category-label">Selected category</span>
-                        <span class="streak-value" id="selected-category-value" aria-live="polite">0</span>
-                        <span class="streak-caption">day streak</span>
-                    </article>
-                </div>
+                <div class="streaks" id="streak-boxes" aria-live="polite"></div>
             </div>
 
             <section class="topics-panel panel-section" id="topics-panel" aria-labelledby="topics-heading">
@@ -55,8 +39,8 @@
                 <section class="github-push-card" aria-labelledby="github-push-heading">
                     <div>
                         <p class="eyebrow">MANUAL SYNC</p>
-                        <h3 id="github-push-heading">Push changes to GitHub</h3>
-                        <p id="github-push-status" class="github-push-status" aria-live="polite">Run the tracker and push your changes when you're ready.</p>
+                        <h3 id="github-push-heading">Update activity</h3>
+                        <p id="github-push-status" class="github-push-status" aria-live="polite">Changes are committed locally. GitHub push is used only if you enabled it during setup.</p>
                     </div>
                     <div class="github-push-controls">
                         <label class="github-push-category-label" for="github-push-category">Category</label>
@@ -67,7 +51,7 @@
                             <option value="custom">Custom…</option>
                         </select>
                         <input id="github-push-custom-category" class="github-push-category" type="text" maxlength="100" placeholder="Enter a category" aria-label="Custom category" hidden>
-                        <button id="github-push" class="recap-button" type="button">Push to GitHub</button>
+                        <button id="github-push" class="recap-button" type="button">Commit and update activity</button>
                     </div>
                 </section>
                 <button class="history-toggle" id="history-toggle" type="button" aria-expanded="false" aria-controls="yesterday-topics-drawer">View yesterday</button>
@@ -220,7 +204,7 @@
         <p>With love</p>
     </footer>
 
-    <script src="index.js?v=20261016-1"></script>
+    <script src="index.js?v=20261016-3"></script>
     <script src="features.js"></script>
 </body>
 </html>

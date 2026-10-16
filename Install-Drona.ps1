@@ -47,6 +47,8 @@ if ($LASTEXITCODE -ne 0) { throw "Could not update pip in Drona's local environm
 & $venvPython -m pip install fastapi uvicorn requests
 if ($LASTEXITCODE -ne 0) { throw "Could not install Drona's Python packages." }
 
+$enableGitHubPush = (Read-Host "Enable optional GitHub push? Enter y (recommended) or press Enter for local commits only") -match '^(y|yes)$'
+
 function Get-DronaGitCommand {
     $command = Get-Command git -ErrorAction SilentlyContinue
     if ($command) { return $command }
@@ -68,7 +70,7 @@ function Get-DronaGitCommand {
 
 $gitCommand = Get-DronaGitCommand
 if (-not $gitCommand) {
-    Write-Host 'Git is required by Drona and was not found. Installing Git for Windows...'
+    Write-Host 'Git is required for Drona activity commits and was not found. Installing Git for Windows...'
     $wingetCommand = Get-Command winget -ErrorAction SilentlyContinue
     if ($wingetCommand) {
         & $wingetCommand.Source install --id Git.Git --exact --source winget --accept-source-agreements --accept-package-agreements --silent
@@ -85,7 +87,7 @@ if (-not $gitCommand) {
                 throw "The Git installer exited with code $($gitInstallProcess.ExitCode)."
             }
         } catch {
-            throw "Git is required, but automatic installation failed. Install Git from https://git-scm.com/install/windows, then run this setup again. Details: $($_.Exception.Message)"
+            throw "Git is required for Drona activity commits, but automatic installation failed. Install Git from https://git-scm.com/install/windows, then run this setup again. Details: $($_.Exception.Message)"
         } finally {
             if (Test-Path -LiteralPath $gitInstaller) { Remove-Item -LiteralPath $gitInstaller -Force }
         }
@@ -98,41 +100,48 @@ if (-not $gitCommand) {
     Write-Host 'Git is installed and ready.' -ForegroundColor Green
 }
 
-if ($gitCommand) {
-    $setupGit = Read-Host "Set up Drona's GitHub push feature now? Enter y or press Enter to skip"
-    if ($setupGit -match '^(y|yes)$') {
-        while ($true) {
-            $repoInput = (Read-Host 'Enter the full path to your Git repository').Trim().Trim('"').Trim("'")
-            if (-not $repoInput) { break }
+while ($true) {
+    $repoInput = (Read-Host 'Enter the full path to the Folder Drona should track').Trim().Trim('"').Trim("'")
+    if (-not $repoInput) {
+        throw 'A Git repository is required so Drona can create local activity commits and update streaks.'
+    }
 
-            $repoRootOutput = & $gitCommand.Source -C $repoInput rev-parse --show-toplevel 2>$null
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host 'That path is not a Git repository. Try again, or press Enter to skip.' -ForegroundColor Yellow
-                continue
-            }
+    $repoRootOutput = & $gitCommand.Source -C $repoInput rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host 'That path is not a Git repository. Try again.' -ForegroundColor Yellow
+        continue
+    }
 
-            $repoRoot = ($repoRootOutput | Out-String).Trim()
-            $remoteOutput = & $gitCommand.Source -C $repoRoot remote get-url origin 2>$null
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "This repository has no origin remote. Drona's push action needs origin; try another path or press Enter to skip." -ForegroundColor Yellow
-                continue
-            }
+    $repoRoot = ($repoRootOutput | Out-String).Trim()
+    if ($enableGitHubPush) {
+        $remoteOutput = & $gitCommand.Source -C $repoRoot remote get-url origin 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "This repository has no origin remote, which is required for GitHub push. Try another repository." -ForegroundColor Yellow
+            continue
+        }
 
-            $currentBranch = (& $gitCommand.Source -C $repoRoot branch --show-current 2>$null | Out-String).Trim()
-            if ($LASTEXITCODE -ne 0 -or $currentBranch -ne 'main') {
-                Write-Host "Drona currently pushes the local main branch. Switch this repository to main, then run setup again." -ForegroundColor Yellow
-                break
-            }
-
-            $settingsPath = Join-Path $databaseDir 'repo_settings.json'
-            $settings = @{ category = 'Use folder category'; repo_path = $repoRoot }
-            $settingsJson = $settings | ConvertTo-Json
-            $utf8NoBom = New-Object System.Text.UTF8Encoding -ArgumentList $false
-            [System.IO.File]::WriteAllText($settingsPath, $settingsJson, $utf8NoBom)
-            Write-Host 'Git repository saved for this computer.' -ForegroundColor Green
-            break
+        $currentBranch = (& $gitCommand.Source -C $repoRoot branch --show-current 2>$null | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0 -or $currentBranch -ne 'main') {
+            Write-Host "GitHub push requires the repository's main branch. Switch to main or choose another repository." -ForegroundColor Yellow
+            continue
         }
     }
+
+    $settingsPath = Join-Path $databaseDir 'repo_settings.json'
+    $settings = @{
+        category = 'Use folder category'
+        repo_path = $repoRoot
+        github_push_enabled = $enableGitHubPush
+    }
+    $settingsJson = $settings | ConvertTo-Json
+    $utf8NoBom = New-Object System.Text.UTF8Encoding -ArgumentList $false
+    [System.IO.File]::WriteAllText($settingsPath, $settingsJson, $utf8NoBom)
+    if ($enableGitHubPush) {
+        Write-Host 'Repository saved. GitHub push is enabled; Drona will push only when you click its push button.' -ForegroundColor Green
+    } else {
+        Write-Host 'Repository saved. Drona will make local commits only; GitHub push is disabled.' -ForegroundColor Green
+    }
+    break
 }
 
 $vsixDirectory = Join-Path $projectDir 'drona-activity-tracker'
