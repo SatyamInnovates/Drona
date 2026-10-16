@@ -169,8 +169,10 @@ const todayIso = localIsoDate(new Date());
 const yesterdayIso = localIsoDate(yesterday);
 const weeklyChart = document.getElementById('weekly-chart');
 const weeklyGoalInput = document.getElementById('weekly-goal-hours');
+// const weeklyGoalStorageKey = 'drona-weekly-focus-goal-hours';
 const weeklyGoalStorageKey = 'drona-weekly-focus-goal-hours';
 let weeklyDays = [];
+
 
 let weeklyTopics = [];
 let weeklySessionsAvailable = false;

@@ -1,12 +1,11 @@
 
-
 const plan = document.getElementById("plan-form")
 const taskInput = document.getElementById("plan-task-input")
 const taskList = document.getElementById("plan-task-list")
 const completed = document.getElementById("plan-completion")
 const progress = document.getElementById("plan-progress-fill")
 const progressBar = document.getElementById("plan-progress-track")
-// console.log(plan,taskInput,taskList,completed)
+
 const now = new Date();
 const today_date = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`
 const focusPlanStorageKey = `drona-focus-plan for ${today_date}`;
