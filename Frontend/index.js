@@ -63,31 +63,6 @@ const githubPushCustomCategory = document.getElementById('github-push-custom-cat
 const copyInstallCommandButton = document.getElementById('copy-install-command');
 const installCommand = document.getElementById('install-command');
 const installCommandStatus = document.getElementById('install-command-status');
-const monochromeToggle = document.getElementById('monochrome-toggle');
-const monochromeLabel = monochromeToggle.querySelector('.toggle-label');
-const monochromeStorageKey = 'drona-monochrome-enabled';
-
-function setMonochromeMode(enabled) {
-    document.documentElement.classList.toggle('monochrome', enabled);
-    monochromeToggle.setAttribute('aria-pressed', String(enabled));
-    monochromeToggle.setAttribute('aria-label', enabled ? 'Switch to color display' : 'Switch to black and white display');
-    monochromeLabel.textContent = enabled ? 'Color' : 'Black & white';
-}
-
-let monochromeEnabled = false;
-try {
-    monochromeEnabled = localStorage.getItem(monochromeStorageKey) === 'true';
-} catch {}
-setMonochromeMode(monochromeEnabled);
-
-monochromeToggle.addEventListener('click', () => {
-    monochromeEnabled = !monochromeEnabled;
-    setMonochromeMode(monochromeEnabled);
-    try {
-        localStorage.setItem(monochromeStorageKey, String(monochromeEnabled));
-    } catch {}
-});
-
 if (copyInstallCommandButton && installCommand && installCommandStatus) {
     copyInstallCommandButton.addEventListener('click', async () => {
         try {

@@ -1,21 +1,20 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css?v=20261016-9">
     <title>Drona | Learning dashboard</title>
 </head>
 <body>
     <main class="page-shell">
         <header class="page-header">
             <div class="header-copy">
-                <p class="eyebrow">YOUR LEARNING WORKSPACE</p>
+                <p class="eyebrow">YOUR GOALS TRACKER</p>
                 <h1 id="heading">Drona</h1>
-                <p id="sub-heading">Your planner and auto agent</p>
+                <p id="sub-heading">Your goals manager and auto agent that handles your github</p>
             </div>
-            <button id="monochrome-toggle" class="monochrome-toggle" type="button" aria-pressed="false" aria-label="Switch to black and white display"><span aria-hidden="true">◐</span><span class="toggle-label">Black &amp; white</span></button>
         </header>
 
         <section class="dashboard-content" aria-labelledby="streak-heading">
@@ -25,7 +24,7 @@
                         <p class="eyebrow">KEEP THE MOMENTUM</p>
                         <h2 id="streak-heading">Learning streaks</h2>
                     </div>
-                    <span class="live-indicator" aria-label="Current streaks">Current</span>
+                    <span class="live-indicator" aria-label="Current streaks"></span>
                 </div>
 
                 <div class="streaks">
@@ -47,14 +46,12 @@
                 </div>
             </div>
 
-            <section class="topics-panel" id="topics-panel" aria-labelledby="topics-heading">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">TODAY'S PROGRESS</p>
-                        <h2 id="topics-heading">What you studied today</h2>
-                    </div>
+            <section class="topics-panel panel-section" id="topics-panel" aria-labelledby="topics-heading">
+                <div class="section-heading panel-title">
+                    <div><p class="eyebrow">TODAY'S PROGRESS</p><h2 id="topics-heading">What you studied today</h2></div>
                     <span class="topic-count" id="topic-count">—</span>
                 </div>
+                <div class="panel-card">
                 <section class="github-push-card" aria-labelledby="github-push-heading">
                     <div>
                         <p class="eyebrow">MANUAL SYNC</p>
@@ -100,6 +97,7 @@
                         <li class="topic-empty">Loading yesterday's topics...</li>
                     </ul>
                 </aside>
+                </div>
             </section>
 
             <section id="container" class="timer-panel" aria-label="Focus timer">
@@ -124,8 +122,8 @@
                 </div>
             </section>
 
-            <section class="weekly-panel" aria-labelledby="weekly-heading">
-                <div class="section-heading">
+            <section class="weekly-panel panel-section" aria-labelledby="weekly-heading">
+                <div class="section-heading panel-title">
                     <div>
                         <p class="eyebrow">THIS WEEK</p>
                         <h2 id="weekly-heading">Weekly progress</h2>
@@ -135,6 +133,7 @@
                         <span><input id="weekly-goal-hours" type="number" min="1" max="168" step="1" value="5" inputmode="numeric"> hrs</span>
                     </label>
                 </div>
+                <div class="panel-card">
                 <div class="weekly-summary" aria-live="polite">
                     <article class="weekly-stat">
                         <span class="readout-label">Manual focus</span>
@@ -159,34 +158,38 @@
                 </div>
                 <div class="weekly-legend" aria-hidden="true"><span><i class="legend-focus"></i>Manual focus</span><span><i class="legend-coding"></i>Coding activity</span></div>
                 <div class="weekly-chart" id="weekly-chart" aria-label="Daily manual focus and automatic coding time from Monday through Sunday" aria-live="polite"></div>
+                </div>
             </section>
 
-            <section class="focus-plan-panel" aria-labelledby="focus-plan-heading">
-                <div class="section-heading">
+            <section class="focus-plan-panel panel-section" aria-labelledby="focus-plan-heading">
+                <div class="section-heading panel-title">
                     <div>
                         <p class="eyebrow">MAKE TODAY COUNT</p>
                         <h2 id="focus-plan-heading">Today's focus plan</h2>
                     </div>
                     <div class="focus-plan-progress" aria-live="polite"><strong id="plan-completion">0/0</strong><span>complete</span></div>
                 </div>
+                <div class="panel-card">
                 <div class="plan-progress-track" role="progressbar" aria-label="Today's plan completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="plan-progress-track"><span id="plan-progress-fill"></span></div>
                 <form id="plan-form" class="plan-form">
                     <label class="visually-hidden" for="plan-task-input">Add a focus task</label>
                     <input id="plan-task-input" type="text" maxlength="120" placeholder="Add a task you want to finish today…" autocomplete="off" required>
-                    <button class="recap-button" type="submit"><span aria-hidden="true">＋</span> Add task</button>
+                    <button class="recap-button" type="submit"><span aria-hidden="true">+</span> Add task</button>
                 </form>
                 <ul id="plan-task-list" class="plan-task-list" aria-live="polite"></ul>
                 <p class="plan-footer"><span aria-hidden="true">✦</span> Small, clear goals make it easier to start.</p>
+                </div>
             </section>
 
-            <section class="yesterday-panel" aria-labelledby="yesterday-heading">
-                <div class="section-heading">
+            <section class="yesterday-panel panel-section" aria-labelledby="yesterday-heading">
+                <div class="section-heading panel-title">
                     <div>
                         <p class="eyebrow">A LOOK BACK</p>
                         <h2 id="yesterday-heading">Yesterday</h2>
                     </div>
                     <span class="yesterday-date" id="yesterday-date"></span>
                 </div>
+                <div class="panel-card">
                 <div class="yesterday-summary">
                     <div class="hours-card">
                         <span class="readout-label">Coding time</span>
@@ -206,6 +209,7 @@
                         </ul>
                     </div>
                 </div>
+                </div>
             </section>
 
         </section>
@@ -216,7 +220,7 @@
         <p>With love</p>
     </footer>
 
-    <script src="index.js"></script>
+    <script src="index.js?v=20261016-1"></script>
     <script src="features.js"></script>
 </body>
 </html>
