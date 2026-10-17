@@ -19,8 +19,6 @@ def get_database_dir():
     database_dir.mkdir(parents=True, exist_ok=True)
 
     if is_new_store:
-        # Seed once from an adjacent packaged database and the project data
-        # folder. Store future writes outside dist so rebuilding cannot erase it.
         sources = [
             exe_dir.parent.parent / "Database",
             exe_dir / "Database",

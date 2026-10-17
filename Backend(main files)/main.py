@@ -43,7 +43,6 @@ def _check(result):
 
 
 def update_activity(category=None, push=False):
-    """Commit tracked repository changes and refresh Drona's activity data."""
     try:
         repo = configured_repo()
         selected_category = choose_category(category)
@@ -61,7 +60,7 @@ def update_activity(category=None, push=False):
         remote = _run_git(["git", "remote", "get-url", "origin"], repo)
         branch = _run_git(["git", "branch", "--show-current"], repo)
         if remote.returncode != 0 or branch.returncode != 0 or branch.stdout.strip() != "main":
-            raise RuntimeError("GitHub push requires an origin remote and the selected repository's main branch.")
+            raise RuntimeError("need origin main")
 
     status = _check(_run_git(
         ["git", "status", "--porcelain", "-z", "--untracked-files=all"], repo

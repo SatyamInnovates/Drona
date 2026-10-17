@@ -17,6 +17,7 @@ import webbrowser
 import subprocess
 import tkinter as tk
 from tkinter import filedialog,messagebox,simpledialog
+
 if getattr(sys, "frozen", False):
     PROJECT_DIR = Path(sys.executable).resolve().parent
 
@@ -127,36 +128,54 @@ def validate_activity_day(day: str):
         raise HTTPException(status_code=400, detail="Invalid day.")
 
 
+def read_sessions():
+    try:
+        data = json.loads(SESSIONS_FILE.read_text(encoding='utf-8'))
+        if not isinstance(data,dict):
+            return {}
+    except (OSError,json.JSONDecodeError):
+        return {}
+    return {
+        day: [normalize_session(s) for s in day_sessions]
+        for day, day_sessions in data.items()
+        if DAY_PATTERN.fullmatch(day) and isinstance(day_sessions, list)
+    }
+
+def normalize_session(session):
+    if isinstance(session, (int, float)) and not isinstance(session, bool):
+        return {"ms": session, "project": "Unassigned"}
+    if isinstance(session, dict):
+        ms = session.get("ms")
+        project = session.get("project", "Unassigned")
+        if isinstance(ms, (int, float)) and not isinstance(ms, bool):
+            return {"ms": ms, "project": str(project).strip()[:60] or "Unassigned"}
+    return {"ms": 0, "project": "Unassigned"}
+
 @app.get("/api/focus-sessions")
 def get_sessions(day: str = ""):
-    if not DAY_PATTERN.fullmatch(day):
-        raise HTTPException(status_code=400, detail="A day in YYYY-MM-DD format is required.")
-    try:
-        date.fromisoformat(day)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid day.")
-    sessions = read_sessions().get(day, [])
-    return {"sessions": sessions if isinstance(sessions, list) else []}
-
+    validate_activity_day(day)
+    return {"sessions": read_sessions().get(day, [])}
 
 class SessionIn(BaseModel):
-    day:str
-    sessions : list[Union[StrictInt,StrictFloat]]
+    ms: Union[StrictInt, StrictFloat]
+    project: str
+
+class SessionsIn(BaseModel):
+    day: str
+    sessions: list[SessionIn]
     
     
 @app.put("/api/focus-sessions")
-def save_sessions(body:SessionIn):
-    if not DAY_PATTERN.fullmatch(body.day):
-        raise HTTPException(status_code=400,detail="A day in YYYY-MM-DD format is required.")
-    try:
-        date.fromisoformat(body.day)
-    except ValueError:
-        raise HTTPException(status_code=400,detail="Invalid day")
-    if len(body.sessions) > 10000 or any(v<0 or v > 86400000 for v in body.sessions):
+def save_sessions(body: SessionsIn):
+    validate_activity_day(body.day)
+    if len(body.sessions) > 10000 or any(s.ms < 0 or s.ms > 86400000 for s in body.sessions):
         raise HTTPException(status_code=400, detail="Sessions must be at most 10000 durations between 0 and 86400000 ms.")
-    
+    normalized = [
+        {"ms": s.ms, "project": (s.project.strip()[:60] or "Unassigned")}
+        for s in body.sessions
+    ]
     data = read_sessions()
-    data[body.day] = body.sessions
+    data[body.day] = normalized
     DATABASE_DIR.mkdir(parents=True,exist_ok=True)
     SESSIONS_FILE.write_text(json.dumps(data,indent=2),encoding="utf-8")
     return {"saved": True}    
@@ -312,6 +331,12 @@ def github_push(body:Github_data,request:Request):
         ACTIVITY_UPDATE_LOCK.release()
 
 app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="static")
+
+
+
+
+
+
 
 def load_settings():
     try:

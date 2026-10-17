@@ -188,7 +188,7 @@ function renderWeeklyProgress() {
     weeklyGoalInput.value = String(goalHours);
     const todayDay = weeklyDays.find(day => day.iso === localIsoDate(new Date()));
     const todayFocus = todayDay && todayDay.iso === localIsoDate(new Date())
-        ? sessions.reduce((sum, ms) => sum + ms, 0) + (isRunning ? Date.now() - segmentStart : 0)
+        ? sessions.reduce((sum, session) => sum + session.ms, 0) + (isRunning ? Date.now() - segmentStart : 0)
         : 0;
     const totalFocusMs = weeklyDays.reduce((sum, day) => sum + (day.iso === localIsoDate(new Date()) ? todayFocus : day.focusMs), 0);
     const totalCodingMs = weeklyDays.reduce((sum, day) => sum + day.codingMs, 0);
@@ -268,7 +268,7 @@ async function loadWeeklyProgress() {
             const response = await fetch('/api/focus-sessions?day=' + encodeURIComponent(day.iso), { cache: 'no-store' });
             if (!response.ok) throw new Error('Could not load weekly focus sessions');
             const data = await response.json();
-            day.focusMs = Array.isArray(data.sessions) ? data.sessions.reduce((sum, ms) => sum + (Number(ms) || 0), 0) : 0;
+            day.focusMs = Array.isArray(data.sessions) ? data.sessions.reduce((sum, session) => sum + (Number(typeof session === 'object' ? session.ms : session) || 0), 0) : 0;
         })),
         Promise.all(weeklyDays.map(async day => {
             const response = await fetch('/api/coding-activity?day=' + encodeURIComponent(day.iso), { cache: 'no-store' });
@@ -415,14 +415,40 @@ let serverSessionsLoaded = false;
 
 const storageKey = "sessions-" + new Date().toDateString();
 const activeSessionKey = storageKey + "-active";
+const activeProjectKey = activeSessionKey + "-project";
+const projectSelect = document.getElementById('focus-project');
+const newProjectInput = document.getElementById('new-focus-project');
+const projectAddButton = document.getElementById('add-focus-project');
+const projectTotals = document.getElementById('focus-project-totals');
+const projectsStorageKey = 'drona-focus-projects';
+let projects = ['Unassigned'];
+try {
+    const savedProjects = JSON.parse(localStorage.getItem(projectsStorageKey) || '[]');
+    if (Array.isArray(savedProjects)) projects = [...new Set(['Unassigned', ...savedProjects.filter(p => typeof p === 'string' && p.trim()).map(p => p.trim())])];
+} catch {}
+function renderProjects() {
+    const selected = projectSelect.value || 'Unassigned';
+    projectSelect.replaceChildren(...projects.map(name => { const option = document.createElement('option'); option.value = name; option.textContent = name; return option; }));
+    projectSelect.value = projects.includes(selected) ? selected : 'Unassigned';
+}
+renderProjects();
+projectAddButton.addEventListener('click', () => {
+    const name = newProjectInput.value.trim();
+    if (!name) { newProjectInput.focus(); return; }
+    const existing = projects.find(p => p.toLowerCase() === name.toLowerCase());
+    if (existing) projectSelect.value = existing;
+    else { projects.push(name); localStorage.setItem(projectsStorageKey, JSON.stringify(projects)); renderProjects(); projectSelect.value = name; }
+    newProjectInput.value = '';
+});
 let sessions = [];
 try {
     const savedSessions = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    if (Array.isArray(savedSessions)) sessions = savedSessions.map(Number).filter(Number.isFinite);
+    if (Array.isArray(savedSessions)) sessions = savedSessions.map(session => typeof session === 'number' ? { ms: session, project: 'Unassigned' } : session).filter(session => session && Number.isFinite(Number(session.ms))).map(session => ({ ms: Number(session.ms), project: typeof session.project === 'string' ? session.project : 'Unassigned' }));
 } catch {
     sessions = [];
 }
 let recoveredActiveMs = 0;
+let recoveredProject = 'Unassigned';
 
 // Keep the start time separately so a browser closed during a running session
 // can recover that time the next time the dashboard opens.
@@ -430,7 +456,9 @@ try {
     const savedStart = Number(localStorage.getItem(activeSessionKey));
     if (Number.isFinite(savedStart) && savedStart > 0) {
         recoveredActiveMs = Math.max(0, Date.now() - savedStart);
+        recoveredProject = localStorage.getItem(activeProjectKey) || 'Unassigned';
         localStorage.removeItem(activeSessionKey);
+        localStorage.removeItem(activeProjectKey);
         localStorage.setItem(storageKey, JSON.stringify(sessions));
     }
 } catch {
@@ -448,9 +476,12 @@ function start(){
     if(!isRunning){
         startTime = Date.now() - elapsetTime;
         segmentStart = Date.now();
-        try { localStorage.setItem(activeSessionKey, String(segmentStart)); } catch {}
+        try { localStorage.setItem(activeSessionKey, String(segmentStart)); localStorage.setItem(activeProjectKey, projectSelect.value || 'Unassigned'); } catch {}
         timer = setInterval(update,10);
         isRunning = true;
+        projectSelect.disabled = true;
+        newProjectInput.disabled = true;
+        projectAddButton.disabled = true;
     }
 }
 
@@ -461,11 +492,11 @@ async function syncSessions() {
         if (!response.ok) throw new Error('Server storage is unavailable');
         const data = await response.json();
         if (!Array.isArray(data.sessions)) throw new Error('Invalid server session data');
-        const serverSavedSessions = data.sessions.map(Number).filter(value => Number.isFinite(value) && value >= 0);
+        const serverSavedSessions = data.sessions.map(session => typeof session === 'number' ? { ms: session, project: 'Unassigned' } : session).filter(session => session && Number.isFinite(Number(session.ms)) && Number(session.ms) >= 0).map(session => ({ ms: Number(session.ms), project: session.project || 'Unassigned' }));
         sessions = serverSavedSessions.length ? serverSavedSessions : localSessions;
         serverSessionsLoaded = true;
         if (recoveredActiveMs > 0) {
-            sessions.push(recoveredActiveMs);
+            sessions.push({ ms: recoveredActiveMs, project: recoveredProject });
             recoveredActiveMs = 0;
             await saveSessionsToServer();
         } else {
@@ -476,7 +507,7 @@ async function syncSessions() {
         renderWeeklyProgress();
     } catch {
         if (recoveredActiveMs > 0) {
-            sessions.push(recoveredActiveMs);
+            sessions.push({ ms: recoveredActiveMs, project: recoveredProject });
             recoveredActiveMs = 0;
             try { localStorage.setItem(storageKey, JSON.stringify(sessions)); } catch {}
         }
@@ -499,12 +530,16 @@ function stop(){
     if(isRunning){
         clearInterval(timer);
         elapsetTime = Date.now() - startTime;
-        sessions.push(Date.now() - segmentStart);
+        sessions.push({ ms: Date.now() - segmentStart, project: localStorage.getItem(activeProjectKey) || projectSelect.value || 'Unassigned' });
         try {
             localStorage.setItem(storageKey, JSON.stringify(sessions));
             localStorage.removeItem(activeSessionKey);
+            localStorage.removeItem(activeProjectKey);
         } catch {}
         isRunning = false;
+        projectSelect.disabled = false;
+        newProjectInput.disabled = false;
+        projectAddButton.disabled = false;
         saveSessionsToServer();
         showTotal();
         renderWeeklyProgress();
@@ -516,11 +551,15 @@ function reset(){
     startTime = 0;
     elapsetTime = 0;
     isRunning = false;
+    projectSelect.disabled = false;
+    newProjectInput.disabled = false;
+    projectAddButton.disabled = false;
     segmentStart = 0;
     sessions = [];
     try {
         localStorage.removeItem(storageKey);
         localStorage.removeItem(activeSessionKey);
+        localStorage.removeItem(activeProjectKey);
     } catch {}
     saveSessionsToServer();
     display.textContent = "00:00:00";
@@ -536,9 +575,16 @@ function update(){
 }
 
 function showTotal(){
-    const completed = sessions.reduce((sum, ms) => sum + ms, 0);
+    const completed = sessions.reduce((sum, session) => sum + session.ms, 0);
     const total = completed + (isRunning ? Date.now() - segmentStart : 0);
     totalDisplay.textContent = formatTime(total);
+    const totals = {};
+    sessions.forEach(session => { totals[session.project] = (totals[session.project] || 0) + session.ms; });
+    if (isRunning) { const project = localStorage.getItem(activeProjectKey) || projectSelect.value || 'Unassigned'; totals[project] = (totals[project] || 0) + Date.now() - segmentStart; }
+    projectTotals.replaceChildren();
+    const entries = Object.entries(totals).filter(([, ms]) => ms > 0).sort((a, b) => b[1] - a[1]);
+    if (!entries.length) { const li = document.createElement('li'); li.textContent = 'No focus time yet.'; projectTotals.append(li); }
+    entries.forEach(([project, ms]) => { const li = document.createElement('li'); li.textContent = `${project}: ${formatTime(ms)}`; projectTotals.append(li); });
 }
 
 showTotal();

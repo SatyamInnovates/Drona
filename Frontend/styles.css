@@ -1,5 +1,5 @@
 ﻿@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Black+Ops+One&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
-/* ---------- 1. THEME (change colors / fonts here) ---------- */
+
 
 :root {
     --bg: #272323;
@@ -20,13 +20,13 @@
     -webkit-font-smoothing: antialiased;
 }
 
-/* ---------- 2. BASE ---------- */
+
 * { box-sizing: border-box; }
 
 body {
     min-width: 320px;
     margin: 0;
-    background: var(--bg);              /* <- site background */
+    background: var(--bg);             
 }
 
 .page-shell {
@@ -232,6 +232,12 @@ input, select {
 #controls #start:hover { background: var(--accent-dark); }
 #controls #stop, #controls #reset { color: var(--muted); }
 #controls #stop:hover, #controls #reset:hover { color: var(--ink); }
+.focus-project-control { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 18px 0 12px; }
+.focus-project-control label, .project-totals > strong { color: var(--muted); font-size: .9rem; }
+.focus-project-control select, .focus-project-control input { min-height: 38px; padding: 0 10px; border: 1px solid var(--line, #555); border-radius: 6px; background: var(--panel, #302d2d); color: var(--ink); }
+.focus-project-control input { width: 170px; }
+.focus-project-control button { min-height: 38px; border-radius: 6px; }
+.project-totals ul { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 8px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: .9rem; }
 
 /* ---------- 7. STREAKS ---------- */
 .streaks { display: grid; flex: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 12px; }
