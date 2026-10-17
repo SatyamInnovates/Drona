@@ -14,6 +14,9 @@ import threading
 import sys
 from fastapi.staticfiles import StaticFiles
 import webbrowser
+import subprocess
+import tkinter as tk
+from tkinter import filedialog,messagebox,simpledialog
 if getattr(sys, "frozen", False):
     PROJECT_DIR = Path(sys.executable).resolve().parent
 
@@ -23,7 +26,7 @@ else:
     FRONTEND_DIR = PROJECT_DIR / "Frontend"
 
 DATABASE_DIR = get_database_dir()
-
+SETTINGS_FILE = DATABASE_DIR / "repo_settings.json"
 SESSIONS_FILE = DATABASE_DIR / "focus_sessions.json"
 
 CODING_ACTIVITY_FILE = DATABASE_DIR / "coding_activity.json"
@@ -273,7 +276,6 @@ def recap(body:RecapIn):
         raise HTTPException(status_code=502, detail="Could not generate a recap right now. Please try again.")
     return {"recap": recap_text}
 
-
 class Github_data(BaseModel):
     category:str
     push: bool = False
@@ -311,7 +313,105 @@ def github_push(body:Github_data,request:Request):
 
 app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="static")
 
+def load_settings():
+    try:
+        return json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+def run_git(folder, *args):
+    return subprocess.run(
+        ["git", "-C", str(folder), *args],
+        capture_output=True, text=True, timeout=10, check=False,
+    )
+
+def get_repo_root(folder):
+    try:
+        result = run_git(folder, "rev-parse", "--show-toplevel")
+    except FileNotFoundError:
+        return None, "Git was not found. Install Git try again."
+    except subprocess.TimeoutExpired:
+        return None, "Git took too longg."
+    if result.returncode != 0:
+        return None, "Nope bro not a git repo."
+    return Path(result.stdout.strip()).resolve(), None        
+        
+def can_push(repo_root):
+    try:
+        has_origin = run_git(repo_root, "remote", "get-url", "origin").returncode == 0
+        branch = run_git(repo_root, "branch", "--show-current").stdout.strip()
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return False
+    return has_origin and branch == "main"
+        
+        
+def ask_user(root,old_settings):
+    while True:
+        folder = filedialog.askdirectory(parent=root,title='choose the git repo')     
+        if not folder:
+            return None
+        repo_root,error = get_repo_root(folder)
+        if error:
+            messagebox.showerror('Drona setup',error,parent=root)
+            continue
+        
+        category = simpledialog.askstring(
+        "Drona setup",
+        "default category:",
+        initialvalue=old_settings.get('category','use folder category'),
+        parent=root                                  
+        )
+        if category is None:
+            return None
+        push = messagebox.askyesno(
+            "Optional GitHub push",
+            "Enable pushing commits to GitHub?\n\nChoose No for local commits only.",
+            default=messagebox.NO,
+            parent=root,
+        )
+        
+        if push and not can_push(repo_root):
+            messagebox.showerror(
+                "Drona setup",
+                "GitHub push needs an origin remote and the repository's main branch. "
+                "Setup will continue with push disabled.",
+                parent=root,
+            )
+            push = False
+        return {
+            "repo_path": str(repo_root),
+            "category": category.strip() or "Use folder category",
+            "github_push_enabled": push,
+        } 
+
+
+def setup_repository_if_needed():
+    settings = load_settings()
+    saved_path = settings.get("repo path","")
+    if saved_path and get_repo_root(saved_path)[0]:
+        return True   
+    
+         
+    root = tk.Tk()
+    root.withdraw()
+    root.attributes("-topmost", True)   
+    try:
+        new_settings = ask_user(root,settings)
+        if new_settings is None:
+            return False
+    
+        settings.update(new_settings)
+        DATABASE_DIR.mkdir(parents=True, exist_ok=True)
+        SETTINGS_FILE.write_text(json.dumps(settings, indent=2), encoding="utf-8")
+        messagebox.showinfo("Drona setup", "Repository saved. You can now use Drona.", parent=root)
+        return True
+    finally:
+        root.destroy()
+        
 if __name__ == "__main__":
     import uvicorn
+    if not setup_repository_if_needed():
+        raise SystemExit("Drona setup was cancelled.")
+    
     uvicorn.run(app, host="127.0.0.1", port=8000)
     webbrowser.open("http://127.0.0.1:8000/Frontend/")
