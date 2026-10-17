@@ -1,39 +1,49 @@
 # Drona
 
-Local learning and coding activity tracker for Windows. Each person runs their own copy; data stays on that computer.
+Drona is a local learning and coding activity dashboard for Windows. It runs on your computer and stores your Drona records in your Windows user profile.
 
-## Install
+## Download and run
 
-1. Download and extract the Drona project.
-2. Open PowerShell in the `Drona` folder and run:
+1. Download `Drona-v0.1.0-Windows.zip` from the GitHub release.
+2. Extract the entire ZIP to a folder you can keep, such as `C:\Users\<you>\Apps\Drona`. Keep `Drona.exe` and the `_internal` folder together.
+3. Make sure [Git for Windows](https://git-scm.com/install/windows) is installed and available on `PATH`. Drona uses Git for repository activity and local commits; Git is not included in the Drona ZIP.
+4. Double-click `Drona.exe`. On first run, choose a Git repository to track and set its activity category. You can also enable or skip the optional GitHub push feature.
+5. Open <http://127.0.0.1:8000/> in your browser. Keep the Drona console window open while using the dashboard. Close that window to stop Drona.
 
-   ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Drona.ps1
-   ```
+If Windows SmartScreen shows a warning, Windows has not recognized the unsigned app yet. Only run it if you downloaded it from the Drona release you trust.
 
-   Setup creates a private Python environment, installs the server packages, and ensures Git is available for local activity commits. It asks for a repository to track and whether to enable the optional GitHub push feature (recommended only if you want Drona to push to that repository). Python 3.10 or newer is required.
-3. Start the app by double-clicking `Start Drona.bat`. Keep the server window open. The dashboard opens at <http://127.0.0.1:8000/Frontend/>.
+## Repository activity and GitHub push
 
-## Local commits and optional GitHub push
+The dashboard button **Commit and update activity** creates a local Git commit and refreshes activity and streak data. If GitHub push is enabled in first-run setup, the button becomes **Commit and push to GitHub** and asks before pushing to `origin/main`.
 
-The dashboard's activity button commits changed files locally and refreshes topics and streaks. If you enable GitHub push during setup, the button instead asks you to confirm before pushing commits to `origin/main`. Push setup requires the selected repository to have an `origin` remote and be on its `main` branch. Set up GitHub authentication for that repository before enabling push. Drona stages all detected changed files when you click the button, so review your repository changes first. If you skip GitHub push, Drona makes local commits only.
+GitHub push requires the selected repository to have an `origin` remote, be on the `main` branch, and have GitHub authentication configured in Git. Drona stages detected changes in the selected repository when you confirm the action, so review the changes before using the button. If you skip push setup, Drona makes local commits only.
 
-## VS Code tracking
+## VS Code activity tracking
 
-The installer uses `drona-activity-tracker/drona-activity-tracker-0.0.2.vsix`. If it cannot install it automatically, install that file from VS Code's **Extensions** panel using **Install from VSIX...**.
+Coding-time tracking requires the Drona VS Code extension. If the extension is provided as a separate `.vsix` download, install it from VS Code's **Extensions** panel using **Install from VSIX...**. Then open the repository you selected in Drona in VS Code.
 
-Tracking sends the workspace name, language, and time to the local Drona server. It does not send file contents or full paths. By default, it stops counting five minutes after the last edit.
+The extension sends the workspace name, language, and time to the local Drona server. It does not send file contents or full paths. By default, it stops counting five minutes after the last edit. The dashboard can still be used without the extension, but coding-time tracking will not be collected.
 
-## Important
+## AI recaps
 
-- Drona currently supports Windows. The server listens only on this computer (`127.0.0.1`).
-- Keep `.env` and the local `Database` JSON files private. They contain API keys or per-user settings and activity.
-- Optional AI recaps require `GROQ_API_KEY` in a private `.env` file.
+AI recaps need a Groq API key. Create a private file named `.env` next to `Drona.exe` with this line:
 
-## Local files
+```text
+GROQ_API_KEY=your-key
+```
 
-- Dashboard: `Frontend/`
-- Server: `Backend(main files)/server2.py`
-- Activity and commit script: `Backend(main files)/main.py`
-- VS Code extension source: `drona-activity-tracker/src/extension.ts`
-- Local records and settings: `Database/`
+Do not share or commit this file.
+
+## Data and privacy
+
+- Drona listens on `127.0.0.1` and is intended for use on this computer.
+- Each Windows user gets their own records and settings under `%LOCALAPPDATA%\Drona\Database`.
+- The release ZIP should contain the app files, not your personal `Database` JSON files or `.env` file.
+- Back up your local database folder if you want to preserve your Drona history when moving to another computer.
+
+## Troubleshooting
+
+- If the dashboard does not load, confirm the Drona console is still open and visit <http://127.0.0.1:8000/>.
+- If Drona reports that the port is already in use, close the other app or Drona process using port `8000`, then start Drona again.
+- If repository setup appears again, select the repository again and make sure Drona can write its settings under `%LOCALAPPDATA%\Drona\Database`.
+- If Git operations fail, confirm Git for Windows is installed, `git` works in PowerShell, and the selected folder is a Git repository.
