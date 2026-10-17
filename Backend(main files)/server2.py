@@ -387,7 +387,7 @@ def ask_user(root,old_settings):
 
 def setup_repository_if_needed():
     settings = load_settings()
-    saved_path = settings.get("repo path","")
+    saved_path = settings.get("repo_path","")
     if saved_path and get_repo_root(saved_path)[0]:
         return True   
     
