@@ -3,11 +3,10 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from app_paths import get_database_dir
 
 
-backend_dir = Path(__file__).resolve().parent
-project_dir = backend_dir.parent
-settings_file = project_dir / "Database" / "repo_settings.json"
+settings_file = get_database_dir() / "repo_settings.json"
 
 def _read_settings():
     try:

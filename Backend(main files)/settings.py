@@ -1,10 +1,10 @@
 import json
 import sys
 from pathlib import Path
+from app_paths import get_database_dir
 
 
-backend_dir = Path(__file__).resolve().parent
-database_dir = backend_dir.parent / "Database"
+database_dir = get_database_dir()
 settings_file = database_dir / "repo_settings.json"
 FOLDER_CATEGORY = "Use folder category"
 CUSTOM_CATEGORY = "Choose my own category"

@@ -3,7 +3,7 @@ const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
 const localIsoDate = value => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
 
-fetch('../Database/streaks.json?day=' + localIsoDate(new Date()), { cache: 'no-store' })
+fetch('/api/streaks', { cache: 'no-store' })
     .then(response => {
         if (!response.ok) throw new Error('Could not load streak data');
         return response.json();
@@ -44,7 +44,7 @@ const githubPushStatus = document.getElementById('github-push-status');
 const githubPushCategory = document.getElementById('github-push-category');
 const githubPushCustomCategory = document.getElementById('github-push-custom-category');
 let githubPushEnabled = false;
-fetch('../Database/repo_settings.json', { cache: 'no-store' })
+fetch('/api/repo-settings', { cache: 'no-store' })
     .then(response => response.ok ? response.json() : {})
     .then(settings => {
         githubPushEnabled = settings.github_push_enabled === true;
@@ -276,7 +276,7 @@ async function loadWeeklyProgress() {
             const data = await response.json();
             day.codingMs = Number(data.total_ms) || 0;
         })),
-        fetch('../Database/data.json?day=' + todayIso, { cache: 'no-store' }).then(response => {
+        fetch('/api/topics', { cache: 'no-store' }).then(response => {
             if (!response.ok) throw new Error('Could not load weekly topics');
             return response.json();
         })
@@ -317,7 +317,7 @@ document.addEventListener('keydown', event => {
 
 
 
-fetch('../Database/data.json?day=' + todayIso, { cache: 'no-store' })
+fetch('/api/topics', { cache: 'no-store' })
     .then(response => {
         if (!response.ok) throw new Error("Could not fetch today's or yesterday's topics");
         return response.json();
@@ -370,7 +370,7 @@ document.getElementById('yesterday-hours').textContent = formatTime(yesterdayMs)
 
 const yesterdayFiles = document.getElementById('yesterday-files');
 const yesterdayFileCount = document.getElementById('yesterday-file-count');
-fetch('../Database/yesterday_files.json?day=' + localIsoDate(yesterday), { cache: 'no-store' })
+fetch('/api/yesterday-files', { cache: 'no-store' })
     .then(response => {
         if (!response.ok) throw new Error('Could not load yesterday’s GitHub files');
         return response.json();

@@ -1,5 +1,6 @@
 from fastapi import FastAPI,HTTPException,Request
 from fastapi.staticfiles import StaticFiles
+from app_paths import get_database_dir
 from pathlib import Path
 import re
 import os
@@ -9,21 +10,32 @@ from typing import Union
 from pydantic import BaseModel,StrictInt,StrictFloat
 import requests
 from urllib.parse import urlparse
-from fastapi.staticfiles import StaticFiles
 import threading
-import subprocess
 import sys
-# The main and defalut server other one is for backup
-PROJECT_DIR = Path(__file__).resolve().parent.parent   
-DATABASE_DIR = PROJECT_DIR / "Database"
+from fastapi.staticfiles import StaticFiles
+import webbrowser
+if getattr(sys, "frozen", False):
+    PROJECT_DIR = Path(sys.executable).resolve().parent
+
+    FRONTEND_DIR = Path(sys._MEIPASS) / "Frontend"
+else:
+    PROJECT_DIR = Path(__file__).resolve().parent.parent
+    FRONTEND_DIR = PROJECT_DIR / "Frontend"
+
+DATABASE_DIR = get_database_dir()
+
 SESSIONS_FILE = DATABASE_DIR / "focus_sessions.json"
+
 CODING_ACTIVITY_FILE = DATABASE_DIR / "coding_activity.json"
+
 DAY_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "openai/gpt-oss-20b"
+
 ACTIVITY_UPDATE_LOCK = threading.Lock()
 CODING_ACTIVITY_LOCK = threading.Lock()
-MAIN_SCRIPT = Path(__file__).resolve().with_name("main.py")
+from main import update_activity
 
 
 
@@ -71,6 +83,37 @@ def read_coding_activity():
     except (OSError, json.JSONDecodeError):
         return {}
 
+
+def read_database_json(filename, fallback):
+    try:
+        return json.loads((DATABASE_DIR / filename).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return fallback
+
+
+@app.get("/api/topics")
+def get_topics():
+    data = read_database_json("data.json", [])
+    return data if isinstance(data, list) else []
+
+
+@app.get("/api/streaks")
+def get_streaks():
+    data = read_database_json("streaks.json", {})
+    return data if isinstance(data, dict) else {}
+
+
+@app.get("/api/yesterday-files")
+def get_yesterday_files():
+    data = read_database_json("yesterday_files.json", [])
+    return data if isinstance(data, list) else []
+
+
+@app.get("/api/repo-settings")
+def get_repo_settings():
+    data = read_database_json("repo_settings.json", {})
+    enabled = isinstance(data, dict) and data.get("github_push_enabled") is True
+    return {"github_push_enabled": enabled}
 
 def validate_activity_day(day: str):
     if not DAY_PATTERN.fullmatch(day):
@@ -222,7 +265,7 @@ def recap(body:RecapIn):
         recap_text = response.json()["choices"][0]["message"]["content"].strip()
         if not recap_text:
             raise ValueError("The AI returned an empty recap.")
-    except requests.HTTPError as error:          # must come first
+    except requests.HTTPError as error:          
         print(f"Groq API returned HTTP {error.response.status_code}: {error.response.text[:2000]}")
         raise HTTPException(status_code=502, detail="The AI provider rejected the recap request. Check the API key and model access.")
     except (requests.RequestException, KeyError, IndexError, TypeError, ValueError) as error:
@@ -255,33 +298,20 @@ def github_push(body:Github_data,request:Request):
         raise HTTPException(status_code=409, detail="An activity update is already running.")
     try:
         try:
-            command = [sys.executable, str(MAIN_SCRIPT), "--category", category]
-            if body.push:
-                command.append("--push")
-            result = subprocess.run(
-                command,
-                cwd=str(PROJECT_DIR),
-                stdin=subprocess.DEVNULL,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                timeout=300,
-                check=False,
-            )
-        except subprocess.TimeoutExpired:
-                raise HTTPException(status_code=504, detail="The activity update timed out after five minutes.")
-        except OSError as error:
-            print(f"Could not start activity update script: {error}")
-            raise HTTPException(status_code=500, detail="Could not start the activity update.")
-        output = (result.stdout or "").strip()
-
-        if result.returncode != 0:
-            details = (result.stderr or output or "The script exited without an error message.").strip()
-            print(f"Activity update failed ({result.returncode}): {details[:2000]}")
-            raise HTTPException(status_code=500, detail=details[-1200:])
+            output = update_activity(category, push=body.push)
+        except RuntimeError as error:
+            print(f"Activity update failed: {error}")
+            raise HTTPException(status_code=500, detail=str(error)[-1200:]) from error
+        except (OSError, ValueError) as error:
+            print(f"Activity update failed,check your terminal: {error}")
+            raise HTTPException(status_code=500, detail="Could not complete the activity update.") from error
         return {"success": True, "message": output or "Tracker finished successfully."}
     finally:
         ACTIVITY_UPDATE_LOCK.release()
-        
-app.mount("/", StaticFiles(directory=str(PROJECT_DIR), html=True), name="static")
+
+app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="static")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+    webbrowser.open("http://127.0.0.1:8000/Frontend/")

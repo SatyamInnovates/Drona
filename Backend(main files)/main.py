@@ -1,160 +1,172 @@
-import subprocess
 import argparse
-from topic import topic_finding,category_finding
 import json
 import re
+import subprocess
 import sys
-from pathlib import Path
 from datetime import date, timedelta
+from pathlib import Path
+
 from config import configured_repo
-from settings import choose_category, FOLDER_CATEGORY
+from app_paths import get_database_dir
+from settings import FOLDER_CATEGORY, choose_category
+from topic import category_finding, topic_finding
 
 
-backend_dir = Path(__file__).resolve().parent
-database_dir = backend_dir.parent / "Database"
+DATABASE_DIR = get_database_dir()
 
-print("heelo just chekcing the code")
-def update_streaks():
-    result = run([sys.executable, str(backend_dir / "ss.py")])
+
+def _run_git(command, repo):
+    if command[0] == "git":
+        command = ["git", "-c", f"safe.directory={repo}", *command[1:]]
+    try:
+        return subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=str(repo),
+            timeout=300,
+            check=False,
+        )
+    except FileNotFoundError as error:
+        raise RuntimeError("Git was not found. Install Git and ensure it is available on PATH.") from error
+    except subprocess.TimeoutExpired as error:
+        raise RuntimeError("The Git activity update timed out after five minutes.") from error
+
+
+def _check(result):
     if result.returncode != 0:
-        print(result.stderr)
-        exit(result.returncode)
-
-def run(cmd):
-    if cmd[0] == "git":
-        cmd = ["git", "-c", f"safe.directory={repo}", *cmd[1:]]
-    return subprocess.run(cmd, capture_output=True, text=True, cwd=str(repo))
+        message = (result.stderr or result.stdout or "Git command failed.").strip()
+        raise RuntimeError(message)
+    return result
 
 
-# args is a object
-try:
-    parser = argparse.ArgumentParser()
-    # print(parser)
-    parser.add_argument("--repo", help="Change and save the repository path")
-    parser.add_argument("--category", help="Use and save this category")
-    parser.add_argument("--push", action="store_true", help="Push the new commit to origin/main")
-    args = parser.parse_args()
-    # print(args)
-    repo = configured_repo(args.repo)
-    # print(repo)
+def update_activity(category=None, push=False):
+    """Commit tracked repository changes and refresh Drona's activity data."""
+    try:
+        repo = configured_repo()
+        selected_category = choose_category(category)
+    except (OSError, ValueError, RuntimeError) as error:
+        raise RuntimeError(str(error)) from error
 
-    selected_category = choose_category(args.category)
-    if args.push:
-        settings_path = backend_dir.parent / "Database" / "repo_settings.json"
+    if push:
+        settings_path = DATABASE_DIR / "repo_settings.json"
         try:
             install_settings = json.loads(settings_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             install_settings = {}
         if not isinstance(install_settings, dict) or install_settings.get("github_push_enabled") is not True:
-            raise ValueError("GitHub push is not enabled in Drona's installation settings.")
-        remote = run(["git", "remote", "get-url", "origin"])
-        branch = run(["git", "branch", "--show-current"])
+            raise RuntimeError("GitHub push is not enabled in Drona's installation settings.")
+        remote = _run_git(["git", "remote", "get-url", "origin"], repo)
+        branch = _run_git(["git", "branch", "--show-current"], repo)
         if remote.returncode != 0 or branch.returncode != 0 or branch.stdout.strip() != "main":
-            raise ValueError("GitHub push requires an origin remote and the selected repository's main branch.")
-except(ValueError) as error:
-    print(f"Some error occured while fetching the path.(try again later) : {error}")
-    raise SystemExit(1)
+            raise RuntimeError("GitHub push requires an origin remote and the selected repository's main branch.")
 
-# args = parser.parse_args()
+    status = _check(_run_git(
+        ["git", "status", "--porcelain", "-z", "--untracked-files=all"], repo
+    ))
+    status_entries = status.stdout.split("\0")
+    changed_paths = []
+    index = 0
+    while index < len(status_entries):
+        entry = status_entries[index]
+        index += 1
+        if not entry:
+            continue
+        change_code, path = entry[:2], entry[3:]
+        changed_paths.append(path)
+        if "R" in change_code or "C" in change_code:
+            if index < len(status_entries) and status_entries[index]:
+                changed_paths.append(status_entries[index])
+                index += 1
 
-
-status = run(["git", "status", "--porcelain", "-z", "--untracked-files=all"])
-if status.returncode != 0:
-    print(status.stderr)
-    exit(status.returncode)
-
-status_entries = status.stdout.split("\0")
-changed_paths = []
-index = 0
-while index < len(status_entries):
-    entry = status_entries[index]
-    index += 1
-    if not entry:
-        continue
-    change_code, path = entry[:2], entry[3:]
-    changed_paths.append(path)
-    if "R" in change_code or "C" in change_code:
-        if index < len(status_entries) and status_entries[index]:
-            changed_paths.append(status_entries[index])
-            index += 1
-
-if not changed_paths:
-    print("No changes to commit.")
-    if args.push:
-        result = run(["git", "push", "origin", "main"])
-        if result.returncode != 0:
-            print(result.stderr)
-            raise SystemExit(result.returncode)
-        print("Pushed local commits to GitHub.")
-else:
-    print(changed_paths)
-    content_lines = changed_paths
-    if content_lines:
-        topics = [topic_finding(path) for path in content_lines]
+    messages = []
+    if not changed_paths:
+        messages.append("No changes to commit.")
+        if push:
+            _check(_run_git(["git", "push", "origin", "main"], repo))
+            messages.append("Pushed local commits to GitHub.")
+    else:
+        topics = [topic_finding(path) for path in changed_paths]
         categories = [
             category_finding(path, repo) if selected_category == FOLDER_CATEGORY else selected_category
-            for path in content_lines
+            for path in changed_paths
         ]
-        print("Topics found:", topics)
-        messages = [f"{topic} [{category}]" for topic, category in zip(topics, categories)]
-        message = '; '.join(messages)
-        print(messages)
+        commit_message = "; ".join(
+            f"{topic} [{item_category}]"
+            for topic, item_category in zip(topics, categories)
+        )
+        _check(_run_git(["git", "add", "-A", "--", *changed_paths], repo))
+        _check(_run_git(["git", "commit", "-m", commit_message], repo))
+        if push:
+            _check(_run_git(["git", "push", "origin", "main"], repo))
+        messages.append("Committed and pushed to GitHub." if push else "Committed locally.")
 
-        commands = [
-            ["git", "add", "-A", "--", *changed_paths],
-            ["git", "commit", "-m", message],
-        ]
-        if args.push:
-            commands.append(["git", "push", "origin", "main"])
-        for cmd in commands:
-            result = run(cmd)
-            if result.returncode != 0:
-                print(result.stderr)
-                exit(result.returncode)
-        print("Committed and pushed to GitHub." if args.push else "Committed locally.")
+    data_output = _check(_run_git(
+        ["git", "log", "--format=%ad|%s", "--date=short"], repo
+    )).stdout
 
-data_output = run(['git','log','--format=%ad|%s','--date=short']).stdout
+    yesterday = date.today() - timedelta(days=1)
+    today = yesterday + timedelta(days=1)
+    file_output = _check(_run_git([
+        "git", "log", "HEAD", "--since", yesterday.isoformat(), "--until", today.isoformat(),
+        "--format=", "--name-only", "--diff-filter=ACMR",
+    ], repo)).stdout
+    yesterday_files = sorted({
+        line.strip().replace("\\", "/")
+        for line in file_output.splitlines()
+        if line.strip()
+    })
 
-yesterday = date.today() - timedelta(days=1)
-today = yesterday + timedelta(days=1)
-file_output = run([
-    'git', 'log', 'HEAD', '--since', yesterday.isoformat(), '--until', today.isoformat(),
-    '--format=', '--name-only', '--diff-filter=ACMR'
-]).stdout
-yesterday_files = sorted({line.strip().replace('\\', '/') for line in file_output.splitlines() if line.strip()})
+    commits = []
+    for data_point in data_output.splitlines():
+        commit_date, data_topic = data_point.split("|", 1)
+        if re.search(r"(?:^|\s)save:", data_topic, flags=re.IGNORECASE):
+            records = [
+                (item_category.strip(), topic.strip())
+                for item_category, topic in re.findall(
+                    r"(?:^|\s)save:\s*\[([^\]]+)\]\s*(.+?)(?=\s+save:|$)",
+                    data_topic,
+                    flags=re.IGNORECASE,
+                )
+            ]
+        else:
+            records = []
+            for record in data_topic.split(";"):
+                match = re.fullmatch(r"\s*(.*?)\s+\[([^\]]+)\]\s*", record)
+                if match:
+                    topic, item_category = match.groups()
+                    records.append((item_category.strip(), topic.strip()))
 
-commits = []
-for data_point in data_output.splitlines():
-    date, data_topic = data_point.split('|', 1)
-    if re.search(r'(?:^|\s)save:', data_topic, flags=re.IGNORECASE):
-        records = [
-            (category.strip(), topic.strip())
-            for category, topic in re.findall(
-                r'(?:^|\s)save:\s*\[([^\]]+)\]\s*(.+?)'
-                r'(?=\s+save:|$)',
-                data_topic,
-                flags=re.IGNORECASE,
-            )
-        ]
-    else:
-        records = []
-        for record in data_topic.split(';'):
-            match = re.fullmatch(r'\s*(.*?)\s+\[([^\]]+)\]\s*', record)
-            if match:
-                topic, category = match.groups()
-                records.append((category.strip(), topic.strip()))
+        for item_category, topic in records:
+            if topic and item_category:
+                commits.append({"date": commit_date, "topic": topic, "category": item_category})
 
-    for category, topic in records:
-        if topic and category:
-            commits.append({"date": date, "topic": topic, "category": category})
+    DATABASE_DIR.mkdir(parents=True, exist_ok=True)
+    (DATABASE_DIR / "data.json").write_text(json.dumps(commits), encoding="utf-8")
+    (DATABASE_DIR / "yesterday_files.json").write_text(
+        json.dumps(yesterday_files, ensure_ascii=False), encoding="utf-8"
+    )
 
- 
+    from ss import refresh_activity
+    refresh_activity()
+    return "\n".join(messages)
 
-with (database_dir / 'data.json').open('w', encoding='utf-8') as file:
-    json.dump(commits,file)
 
-with (database_dir / 'yesterday_files.json').open('w', encoding='utf-8') as file:
-    json.dump(yesterday_files, file, ensure_ascii=False)
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--repo", help="Change and save the repository path")
+    parser.add_argument("--category", help="Use and save this category")
+    parser.add_argument("--push", action="store_true", help="Push the new commit to origin/main")
+    args = parser.parse_args()
+    try:
+        if args.repo:
+            configured_repo(args.repo)
+        print(update_activity(args.category, push=args.push))
+    except (RuntimeError, ValueError, OSError) as error:
+        parser.error(str(error))
 
-update_streaks()
 
+if __name__ == "__main__":
+    main()
