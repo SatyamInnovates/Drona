@@ -30,3 +30,5 @@ Use your GitHub `noreply` email if you prefer not to show your personal email in
 
 - If Git is not found, install Git for Windows and restart Drona.
 - If the dashboard does not load, make sure Drona is still running and visit <http://127.0.0.1:8000/>.
+
+Tutorial Link : (https://x.com/Code_Arjun/status/2111779850155667564)
