@@ -18,6 +18,15 @@ The dashboard button **Commit and update activity** creates a local Git commit a
 
 GitHub push requires the selected repository to have an `origin` remote, be on the `main` branch, and have GitHub authentication configured in Git. Drona stages detected changes in the selected repository when you confirm the action, so review the changes before using the button. If you skip push setup, Drona makes local commits only.
 
+Before creating a commit, Git needs your author name and email. Configure them in PowerShell, replacing the examples with your own:
+
+```powershell
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+```
+
+These settings apply to all your repositories. To configure identity only for the current repository, run the commands from that repository and omit `--global`. If you use GitHub and prefer not to expose your personal email in commits, use the GitHub-provided `noreply` address from your account settings.
+
 ## VS Code activity tracking
 
 Coding-time tracking requires the Drona VS Code extension. If the extension is provided as a separate `.vsix` download, install it from VS Code's **Extensions** panel using **Install from VSIX...**. Then open the repository you selected in Drona in VS Code.
