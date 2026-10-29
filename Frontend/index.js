@@ -119,7 +119,7 @@ async function generateRecap(topics, focusTime) {
         body: JSON.stringify({ topics, focusTime, day: todayIso })
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Could not generate recap.');
+    if (!response.ok) throw new Error(data.detail || data.error || 'Could not generate recap.');
     return data.recap;
 }
 

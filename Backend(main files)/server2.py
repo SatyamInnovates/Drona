@@ -254,17 +254,43 @@ def recap(body:RecapIn):
         date.fromisoformat(day)
     except ValueError:
         raise HTTPException(status_code=400,detail="invalid day")
+    focus_parts = body.focusTime.strip().split(":")
+    no_focus_time = (
+        len(focus_parts) == 3
+        and all(part.isdigit() and int(part) == 0 for part in focus_parts)
+    )
+    coding_events = read_coding_activity().get(day, [])
+    coding_totals = {}
+    if isinstance(coding_events, list):
+        for event in coding_events:
+            if not isinstance(event, dict):
+                continue
+            duration_ms = event.get("duration_ms")
+            if not isinstance(duration_ms, int) or isinstance(duration_ms, bool) or duration_ms <= 0:
+                continue
+            project = str(event.get("project", "Unknown"))[:120]
+            language = str(event.get("language", "unknown"))[:50]
+            key = (project, language)
+            coding_totals[key] = coding_totals.get(key, 0) + duration_ms
+    coding_activity = [
+        {"project": project, "language": language, "duration_ms": duration_ms}
+        for (project, language), duration_ms in coding_totals.items()
+    ]
+    if not body.topics and no_focus_time and not coding_activity:
+        return {"recap": "No learning progress today so can't generate recap.", "no_progress": True}
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         raise HTTPException(status_code=503,detail="GROQ_API_KEY is not set in the server environment or project .env file.")
     prompt = (
         "Write a natural, concise daily learning recap in 2–3 short sentences. Use only the supplied data. "
         "Do not add headings, bullet points, markdown, repeated praise, or generic motivational slogans. "
-        "Mention the topics and focus time plainly. If there are no topics, say that none were recorded; "
+        "Mention the topics, focus time, and coding activity plainly. If there are no topics, say that none were recorded; "
+        "if coding activity is present, describe it using the supplied project, language, and duration data. "
         "do not imply the user studied a topic. Suggest one small, practical next action suited to the "
         "activity shown. For very little focus time, invite the user to start or continue a short session; "
         "do not suggest taking a break or planning tomorrow unless the data supports it.\n\n"
-        f"Date: {day}\nTopics: {json.dumps(body.topics, ensure_ascii=False)}\nFocus time: {body.focusTime}"
+        f"Date: {day}\nTopics: {json.dumps(body.topics, ensure_ascii=False)}\n"
+        f"Focus time: {body.focusTime}\nCoding activity: {json.dumps(coding_activity, ensure_ascii=False)}"
     )
     
     try:
