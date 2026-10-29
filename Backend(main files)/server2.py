@@ -313,9 +313,26 @@ def recap(body:RecapIn):
         recap_text = response.json()["choices"][0]["message"]["content"].strip()
         if not recap_text:
             raise ValueError("The AI returned an empty recap.")
-    except requests.HTTPError as error:          
-        print(f"Groq API returned HTTP {error.response.status_code}: {error.response.text[:2000]}")
-        raise HTTPException(status_code=502, detail="The AI provider rejected the recap request. Check the API key and model access.")
+    except requests.HTTPError as error:
+        status = error.response.status_code if error.response is not None else 0
+        if status == 401:
+            detail = "Groq rejected the API key. Check that GROQ_API_KEY is valid, then restart Drona."
+        elif status == 403:
+            detail = "Groq denied access. Check the API key permissions and model access."
+        elif status == 404:
+            detail = "Groq could not find the requested model or API endpoint. Check the Drona model configuration."
+        elif status == 429:
+            detail = "Groq rate limit reached. Wait a little, then try again."
+        else:
+            detail = f"Groq rejected the recap request (HTTP {status}). Please try again later."
+        print(f"Groq API returned HTTP {status}.")
+        raise HTTPException(status_code=502, detail=detail)
+    except requests.Timeout as error:
+        print(f"Groq recap request timed out: {error}")
+        raise HTTPException(status_code=502, detail="Groq took too long to respond. Check your connection and try again.")
+    except requests.ConnectionError as error:
+        print(f"Could not connect to Groq: {error}")
+        raise HTTPException(status_code=502, detail="Could not connect to Groq. Check your internet connection and try again.")
     except (requests.RequestException, KeyError, IndexError, TypeError, ValueError) as error:
         print(f"Could not generate recap: {error}")
         raise HTTPException(status_code=502, detail="Could not generate a recap right now. Please try again.")
