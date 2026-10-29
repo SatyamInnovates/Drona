@@ -4,7 +4,7 @@ Drona is a local dashboard for tracking coding activity, and focus time on Windo
 
 ## Quick start
 
-1. Download and extract `Drona-v0.1.0-Windows.zip` from the GitHub release.
+1. Download and extract `Drona.zip` from the GitHub release.
 2. Install [Git for Windows](https://git-scm.com/install/windows) if it is not already installed. Drona uses Git to track repository activity.
 3. Run `Drona.exe` and choose a folder to track. **The folder must be a Git repository.**
 4. Open <http://127.0.0.1:8000/> in your browser. Keep the Drona window open while using the dashboard.
