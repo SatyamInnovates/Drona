@@ -1,6 +1,6 @@
 # Drona
 
-Drona is a local dashboard for tracking coding activity, and focus time on Windows.
+Drona is a local dashboard for Windows that tracks your coding activity and focus time, and can push your commits to GitHub.(Windows)
 
 ## Quick start
 
