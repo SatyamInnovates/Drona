@@ -1,6 +1,6 @@
 # Drona
 
-Drona is a local dashboard for tracking learning progress, coding activity, and focus time on Windows.
+Drona is a local dashboard for tracking coding activity, and focus time on Windows.
 
 ## Quick start
 
