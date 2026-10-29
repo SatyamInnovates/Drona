@@ -39,6 +39,7 @@ These values identify the author of your commits. Use your GitHub `noreply` emai
 
 This appears when you request a recap with activity recorded for today, but Drona cannot find a Groq API key. Create a `.env` file next to `Drona.exe` and add your key on one line, with no spaces around `=`:
 
+If you have added the api_key and it is still saying that api_key is not inserted please restart the the app!
 ```text
 GROQ_API_KEY=your_api_key
 ```
